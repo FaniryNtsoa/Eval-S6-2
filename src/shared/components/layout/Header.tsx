@@ -7,6 +7,7 @@ import { cn } from "@/shared/lib/utils"
 
 const navLinks = [
   { to: ROUTES.home, label: "Accueil" },
+  { to: ROUTES.elements, label: "Éléments" },
   { to: ROUTES.admin.dashboard, label: "Administration" },
 ]
 
@@ -24,7 +25,10 @@ export function Header() {
         </Link>
         <nav className="flex items-center gap-1">
           {navLinks.map((link) => {
-            const isActive = location.pathname === link.to
+            const isActive =
+              link.to === ROUTES.home
+                ? location.pathname === link.to
+                : location.pathname.startsWith(link.to)
 
             return (
               <Button

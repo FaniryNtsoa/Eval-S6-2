@@ -49,12 +49,17 @@ export function HomePage() {
               tickets et gérer les imports depuis un backoffice unifié.
             </p>
           </div>
-          <Button asChild size="lg" className="gap-2">
-            <Link to={ROUTES.admin.dashboard}>
-              Accéder au backoffice
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button asChild size="lg" className="gap-2">
+              <Link to={ROUTES.elements}>
+                Consulter les éléments
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to={ROUTES.admin.dashboard}>Administration</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
