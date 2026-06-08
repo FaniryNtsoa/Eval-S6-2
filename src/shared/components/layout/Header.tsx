@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom"
+import { Plus } from "lucide-react"
 
+import { useCreateTicketModal } from "@/modules/assistance/context/CreateTicketModalContext"
 import { Button } from "@/shared/components/ui/button"
 import { APP_CONFIG } from "@/shared/constants/config"
 import { ROUTES } from "@/shared/constants/routes"
@@ -13,6 +15,7 @@ const navLinks = [
 
 export function Header() {
   const location = useLocation()
+  const { openCreateTicket } = useCreateTicketModal()
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -24,6 +27,15 @@ export function Header() {
           {APP_CONFIG.name}
         </Link>
         <nav className="flex items-center gap-1">
+          <Button
+            variant="default"
+            size="sm"
+            className="mr-1"
+            onClick={openCreateTicket}
+          >
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">Créer un ticket</span>
+          </Button>
           {navLinks.map((link) => {
             const isActive =
               link.to === ROUTES.home

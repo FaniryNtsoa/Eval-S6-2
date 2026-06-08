@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
-import { ArrowRight, Database, Shield, Upload } from "lucide-react"
+import { ArrowRight, Database, Plus, Shield, Upload } from "lucide-react"
 
+import { useCreateTicketModal } from "@/modules/assistance/context/CreateTicketModalContext"
 import { Button } from "@/shared/components/ui/button"
 import {
   Card,
@@ -33,6 +34,8 @@ const features = [
 ]
 
 export function HomePage() {
+  const { openCreateTicket } = useCreateTicketModal()
+
   return (
     <div className="flex flex-col gap-16 py-8 md:py-12">
       <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-linear-to-br from-primary/8 via-background to-muted/40 px-6 py-14 text-center md:px-12 md:py-20">
@@ -50,13 +53,17 @@ export function HomePage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg" className="gap-2">
+            <Button size="lg" className="gap-2" onClick={openCreateTicket}>
+              <Plus className="size-4" />
+              Créer un ticket
+            </Button>
+            <Button asChild size="lg" variant="outline" className="gap-2">
               <Link to={ROUTES.elements}>
                 Consulter les éléments
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
+            <Button asChild variant="ghost" size="lg">
               <Link to={ROUTES.admin.dashboard}>Administration</Link>
             </Button>
           </div>

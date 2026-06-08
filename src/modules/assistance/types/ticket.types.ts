@@ -18,3 +18,41 @@ export interface GlpiTicketListItem {
 }
 
 export type GlpiTicketDetail = GlpiTicketListItem
+
+export interface TicketLinkedElement {
+  itemType: string
+  itemId: number
+}
+
+export interface CreateTicketFormValues {
+  title: string
+  description: string
+  type: number
+  priority: number
+  status: number
+  externalId: string
+}
+
+export interface CreateTicketInput {
+  title: string
+  description: string
+  type: number
+  priority: number
+  status?: number
+  externalId?: string
+  elements: TicketLinkedElement[]
+}
+
+export interface CreateTicketResult {
+  ticketId: number
+  warnings: string[]
+}
+
+export const DEFAULT_CREATE_TICKET_FORM: CreateTicketFormValues = {
+  title: "",
+  description: "",
+  type: 1,
+  priority: 3,
+  status: 1,
+  externalId: "",
+}

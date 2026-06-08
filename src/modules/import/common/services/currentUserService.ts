@@ -1,7 +1,12 @@
 import { env } from "@/config/env"
-import { findOneByField } from "@/modules/import/common/services/glpiResourceService"
+import {
+  ACTIVE_ONLY_FILTER,
+  findOneByField,
+} from "@/modules/import/common/services/glpiResourceService"
 import type { GlpiListItem } from "@/modules/import/common/types/glpi.types"
+import { buildRsqlAnd, buildRsqlEquals } from "@/modules/import/common/utils/rsql"
 import { glpiClient } from "@/services/api/client"
+import { publicGlpiClient } from "@/services/api/publicGlpiClient"
 
 interface CurrentUser {
   id: number
@@ -42,4 +47,41 @@ export async function getCurrentUserId(): Promise<number> {
 
 export function clearCurrentUserCache(): void {
   cachedUserId = null
+}
+
+let cachedPublicUserId: number | null = null
+
+export async function getPublicCurrentUserId(): Promise<number> {
+  if (cachedPublicUserId !== null) {
+    return cachedPublicUserId
+  }
+
+  try {
+    const { data } = await publicGlpiClient.get<CurrentUser>(
+      `${USER_ENDPOINT}/Me`,
+    )
+    cachedPublicUserId = data.id
+    return cachedPublicUserId
+  } catch {
+    const { data } = await publicGlpiClient.get<GlpiListItem[]>(USER_ENDPOINT, {
+      params: {
+        filter: buildRsqlAnd(
+          buildRsqlEquals("username", env.glpiUsername),
+          ACTIVE_ONLY_FILTER,
+        ),
+        limit: 1,
+      },
+    })
+
+    const existing = Array.isArray(data) && data.length > 0 ? data[0] : null
+
+    if (!existing) {
+      throw new Error(
+        "Impossible de résoudre l'utilisateur API courant pour le frontoffice.",
+      )
+    }
+
+    cachedPublicUserId = existing.id
+    return cachedPublicUserId
+  }
 }

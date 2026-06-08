@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
-import { Database, RefreshCw, Search, X } from "lucide-react"
+import { Database, Plus, RefreshCw, Search, X } from "lucide-react"
 
+import { useCreateTicketModal } from "@/modules/assistance/context/CreateTicketModalContext"
 import { useElements } from "@/modules/inventory/hooks/useElements"
 import {
   EMPTY_ELEMENT_SEARCH,
@@ -46,6 +47,7 @@ export function ElementsPage() {
   const [criteria, setCriteria] = useState<ElementSearchCriteria>(
     EMPTY_ELEMENT_SEARCH,
   )
+  const { openCreateTicket } = useCreateTicketModal()
   const { elements, isLoading, error, loadElements } = useElements()
 
   const filteredElements = useMemo(
@@ -111,6 +113,10 @@ export function ElementsPage() {
         title="Éléments"
         description="Consultez l'inventaire GLPI et affinez les résultats avec plusieurs critères de recherche."
       >
+        <Button variant="default" size="sm" onClick={openCreateTicket}>
+          <Plus className="size-4" />
+          Créer un ticket
+        </Button>
         <Button
           variant="outline"
           size="sm"
