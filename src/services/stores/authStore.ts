@@ -4,7 +4,10 @@ import { persist } from "zustand/middleware"
 import { fetchGlpiToken } from "@/modules/auth/services/glpiAuthService"
 import { validateAdminCode } from "@/modules/auth/services/authService"
 
+const TOKEN_REFRESH_BUFFER_MS = 2 * 60 * 1000
+
 let expiryTimer: ReturnType<typeof setTimeout> | null = null
+let refreshPromise: Promise<boolean> | null = null
 
 function clearExpiryTimer() {
   if (expiryTimer) {
@@ -20,6 +23,8 @@ interface AuthState {
   login: (code: string) => Promise<boolean>
   logout: () => void
   checkSession: () => boolean
+  refreshSession: () => Promise<boolean>
+  ensureSession: () => Promise<boolean>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => {
       const logout = () => {
         clearExpiryTimer()
+        refreshPromise = null
         set({
           isAuthenticated: false,
           accessToken: null,
@@ -61,15 +67,12 @@ export const useAuthStore = create<AuthState>()(
         return true
       }
 
-      return {
-        isAuthenticated: false,
-        accessToken: null,
-        expiresAt: null,
-        login: async (code) => {
-          if (!validateAdminCode(code)) {
-            return false
-          }
+      const refreshSession = async () => {
+        if (refreshPromise) {
+          return refreshPromise
+        }
 
+        refreshPromise = (async () => {
           try {
             const { accessToken, expiresAt } = await fetchGlpiToken()
 
@@ -82,11 +85,50 @@ export const useAuthStore = create<AuthState>()(
 
             return true
           } catch {
+            logout()
+            return false
+          } finally {
+            refreshPromise = null
+          }
+        })()
+
+        return refreshPromise
+      }
+
+      const ensureSession = async () => {
+        const { isAuthenticated, accessToken, expiresAt } = get()
+
+        if (!isAuthenticated || !expiresAt) {
+          return false
+        }
+
+        if (Date.now() >= expiresAt) {
+          logout()
+          return false
+        }
+
+        if (!accessToken || Date.now() >= expiresAt - TOKEN_REFRESH_BUFFER_MS) {
+          return refreshSession()
+        }
+
+        return true
+      }
+
+      return {
+        isAuthenticated: false,
+        accessToken: null,
+        expiresAt: null,
+        login: async (code) => {
+          if (!validateAdminCode(code)) {
             return false
           }
+
+          return refreshSession()
         },
         logout,
         checkSession,
+        refreshSession,
+        ensureSession,
       }
     },
     {

@@ -7,6 +7,8 @@ import { cn } from "@/shared/lib/utils"
 
 const navItems = [
   { to: ROUTES.admin.dashboard, label: "Tableau de bord" },
+  { to: ROUTES.admin.import, label: "Import" },
+  { to: ROUTES.admin.resetData, label: "Réinitialiser" },
 ]
 
 export function Sidebar() {

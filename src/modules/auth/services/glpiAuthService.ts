@@ -18,7 +18,7 @@ export async function fetchGlpiToken(): Promise<{
     client_secret: env.glpiClientSecret,
     username: env.glpiUsername,
     password: env.glpiPassword,
-    scope: "api",
+    scope: "api user",
   })
 
   const { data } = await axios.post<GlpiTokenResponse>(

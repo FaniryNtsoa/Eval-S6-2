@@ -6,6 +6,8 @@ import { GuestAdminAuth } from "@/modules/auth/guards/GuestAdminAuth"
 import { RequireAdminAuth } from "@/modules/auth/guards/RequireAdminAuth"
 import { Login } from "@/pages/admin/auth/Login"
 import { DashboardPage } from "@/pages/admin/dashboard/DashboardPage"
+import { UnifiedImportPage } from "@/pages/admin/import/UnifiedImportPage"
+import { ResetDataPage } from "@/pages/admin/reset/ResetDataPage"
 import { HomePage } from "@/pages/public/home/HomePage"
 import { ROUTES } from "@/shared/constants/routes"
 
@@ -40,6 +42,14 @@ export const router = createBrowserRouter([
               {
                 path: "dashboard",
                 element: <DashboardPage />,
+              },
+              {
+                path: "import",
+                element: <UnifiedImportPage />,
+              },
+              {
+                path: "reset",
+                element: <ResetDataPage />,
               },
             ],
           },
