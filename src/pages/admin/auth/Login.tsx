@@ -1,15 +1,27 @@
 import { useState, type FormEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Database, Lock } from "lucide-react"
 
 import { DEFAULT_ADMIN_CODE } from "@/modules/auth/constants"
 import { useAuthStore } from "@/services/stores/authStore"
+import { APP_CONFIG } from "@/shared/constants/config"
 import { Button } from "@/shared/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card"
+import { Input } from "@/shared/components/ui/input"
+import { Label } from "@/shared/components/ui/label"
 import { ROUTES } from "@/shared/constants/routes"
 
 export function Login() {
   const [code, setCode] = useState(DEFAULT_ADMIN_CODE)
   const [error, setError] = useState<string | null>(null)
-  const  login = useAuthStore((state) => state.login)
+  const login = useAuthStore((state) => state.login)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -37,48 +49,63 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Accès backoffice
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Saisissez le code d&apos;accès pour continuer.
-          </p>
+    <div className="flex min-h-svh flex-col items-center justify-center bg-muted/40 px-4">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Database className="size-5" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold tracking-tight">
+              {APP_CONFIG.name}
+            </h1>
+            <p className="text-sm text-muted-foreground">Espace administration</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="admin-code" className="text-sm font-medium">
-              Code d&apos;accès
-            </label>
-            <input
-              id="admin-code"
-              type="password"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              autoComplete="off"
-            />
-          </div>
+        <Card className="shadow-sm">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-base">
+              <Lock className="size-4 text-muted-foreground" />
+              Connexion
+            </CardTitle>
+            <CardDescription>
+              Saisissez le code d&apos;accès pour continuer.
+            </CardDescription>
+          </CardHeader>
 
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-code">Code d&apos;accès</Label>
+                <Input
+                  id="admin-code"
+                  type="password"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  autoComplete="off"
+                  aria-invalid={!!error}
+                />
+              </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Connexion en cours..." : "Accéder au backoffice"}
-          </Button>
-        </form>
+              {error && (
+                <p className="text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
 
-        <p className="text-center text-sm text-muted-foreground">
-          <Link to={ROUTES.home} className="hover:text-primary">
-            Retour à l&apos;accueil
-          </Link>
-        </p>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Connexion en cours…" : "Accéder au backoffice"}
+              </Button>
+            </form>
+          </CardContent>
+
+          <CardFooter className="justify-center border-0 bg-transparent pt-0">
+            <Button variant="link" size="sm" asChild>
+              <Link to={ROUTES.home}>Retour à l&apos;accueil</Link>
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )

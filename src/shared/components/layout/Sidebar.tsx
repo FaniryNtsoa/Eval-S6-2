@@ -1,18 +1,38 @@
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import {
+  Database,
+  LayoutDashboard,
+  LogOut,
+  RotateCcw,
+  Upload,
+} from "lucide-react"
 
 import { useAuthStore } from "@/services/stores/authStore"
-import { Button } from "@/shared/components/ui/button"
+import { APP_CONFIG } from "@/shared/constants/config"
 import { ROUTES } from "@/shared/constants/routes"
-import { cn } from "@/shared/lib/utils"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/shared/components/ui/sidebar"
 
 const navItems = [
-  { to: ROUTES.admin.dashboard, label: "Tableau de bord" },
-  { to: ROUTES.admin.import, label: "Import" },
-  { to: ROUTES.admin.resetData, label: "Réinitialiser" },
+  { to: ROUTES.admin.dashboard, label: "Tableau de bord", icon: LayoutDashboard },
+  { to: ROUTES.admin.import, label: "Import", icon: Upload },
+  { to: ROUTES.admin.resetData, label: "Réinitialiser", icon: RotateCcw },
 ]
 
-export function Sidebar() {
+export function AdminSidebar() {
   const navigate = useNavigate()
+  const location = useLocation()
   const logout = useAuthStore((state) => state.logout)
 
   const handleLogout = () => {
@@ -21,30 +41,73 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-muted/20">
-      <nav className="flex flex-col gap-1 p-4">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "rounded-md px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="mt-auto border-t border-border p-4">
-        <Button variant="outline" className="w-full" onClick={handleLogout}>
-          Déconnexion
-        </Button>
-      </div>
-    </aside>
+    <Sidebar collapsible="icon" variant="inset">
+      <SidebarHeader className="border-b border-sidebar-border/60">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="pointer-events-none"
+              tooltip={APP_CONFIG.name}
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Database className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left leading-tight">
+                <span className="truncate font-semibold">{APP_CONFIG.name}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  Administration
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.to
+
+                return (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.label}
+                    >
+                      <NavLink to={item.to}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border/60">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Déconnexion"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={handleLogout}
+            >
+              <LogOut />
+              <span>Déconnexion</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
   )
 }

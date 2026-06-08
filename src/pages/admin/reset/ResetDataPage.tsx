@@ -1,10 +1,28 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
+import { Plus, RotateCcw, ShieldAlert } from "lucide-react"
 
 import { useResetImportData } from "@/modules/import/reset/hooks/useResetImportData"
+import { AdminPageHeader } from "@/shared/components/layout/admin/AdminPageHeader"
+import { ResetFormModal } from "@/shared/components/layout/admin/ResetFormModal"
+import { ResetStatusBadge } from "@/shared/components/layout/admin/StatusBadge"
+import { StatCard } from "@/shared/components/layout/admin/StatCard"
 import { Button } from "@/shared/components/ui/button"
-import { cn } from "@/shared/lib/utils"
-
-const CONFIRMATION_TEXT = "RESET"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/components/ui/table"
 
 function formatCategoryLabel(category: string): string {
   if (category.startsWith("asset-")) {
@@ -31,190 +49,122 @@ function formatCategoryLabel(category: string): string {
 }
 
 export function ResetDataPage() {
-  const [confirmation, setConfirmation] = useState("")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [modalOpen, setModalOpen] = useState(searchParams.get("new") === "1")
+
   const { progress, report, isRunning, error, reset, runReset } =
     useResetImportData()
 
-  const canReset = confirmation === CONFIRMATION_TEXT && !isRunning
-
-  const progressPercent =
-    progress.total > 0
-      ? Math.round((progress.processed / progress.total) * 100)
-      : 0
-
-  const handleReset = async () => {
-    if (!canReset) {
-      return
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setModalOpen(true)
+      setSearchParams({}, { replace: true })
     }
+  }, [searchParams, setSearchParams])
 
-    await runReset()
-    setConfirmation("")
-  }
+  useEffect(() => {
+    if (!isRunning && report && modalOpen) {
+      setModalOpen(false)
+    }
+  }, [isRunning, report, modalOpen])
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Réinitialiser les données GLPI
-        </h1>
-        <p className="text-muted-foreground">
-          Supprime toutes les données gérées par les imports de l&apos;application,
-          quelle que soit leur origine CSV.
-        </p>
-      </div>
-
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 space-y-4">
-        <h2 className="font-medium text-destructive">Action irréversible</h2>
-        <p className="text-sm text-muted-foreground">
-          Les cibles sont détectées dynamiquement depuis l&apos;API GLPI
-          (comme pour l&apos;import). Cette opération supprime dans l&apos;ordre :
-        </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li>
-            <strong>Tous les coûts tickets</strong>, puis{" "}
-            <strong>tous les tickets</strong> (corbeille incluse)
-          </li>
-          <li>
-            <strong>Tous les actifs</strong> des types supportés, y compris la
-            corbeille (suppression définitive via <code>force=true</code>)
-          </li>
-          <li>
-            <strong>Tous les utilisateurs</strong> sauf les comptes système et
-            le compte API configuré
-          </li>
-          <li>
-            <strong>Toutes les références</strong> liées aux imports : statuts,
-            lieux, fabricants, modèles…
-          </li>
-        </ul>
-
-        <div className="space-y-2">
-          <label
-            htmlFor="reset-confirmation"
-            className="text-sm font-medium text-foreground"
-          >
-            Tapez <code>{CONFIRMATION_TEXT}</code> pour confirmer
-          </label>
-          <input
-            id="reset-confirmation"
-            type="text"
-            value={confirmation}
-            onChange={(event) => {
-              setConfirmation(event.target.value)
-              if (report || error) {
-                reset()
-              }
-            }}
-            disabled={isRunning}
-            placeholder={CONFIRMATION_TEXT}
-            className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Réinitialiser les données GLPI"
+        description="Supprime toutes les données gérées par les imports de l'application."
+      >
         <Button
           variant="destructive"
-          onClick={handleReset}
-          disabled={!canReset}
+          onClick={() => setModalOpen(true)}
+          disabled={isRunning}
         >
-          {isRunning ? "Suppression en cours…" : "Réinitialiser les données"}
+          <Plus className="size-4" />
+          Réinitialiser
         </Button>
+      </AdminPageHeader>
 
-        {isRunning && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{progress.message}</span>
-              <span>{progressPercent}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full bg-destructive transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
+      <ResetFormModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        isRunning={isRunning}
+        error={error}
+        progress={progress}
+        onReset={runReset}
+        onClear={reset}
+      />
 
-        {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </p>
-        )}
-      </div>
+      <Card className="border-destructive/25 shadow-none">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base text-destructive">
+            <ShieldAlert className="size-4" />
+            Zone de danger
+          </CardTitle>
+          <CardDescription>
+            Cette opération supprime dans l&apos;ordre les coûts tickets, les
+            tickets, les actifs, les utilisateurs (sauf comptes système) et les
+            références liées aux imports.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!report && !isRunning && (
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                <RotateCcw className="size-5 text-muted-foreground" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">Aucune réinitialisation récente</p>
+                <p className="text-sm text-muted-foreground">
+                  Utilisez le bouton ci-dessus pour lancer une suppression.
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {report && (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="text-sm text-muted-foreground">Supprimés</p>
-              <p className="text-2xl font-semibold text-emerald-600">
-                {report.deleted}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="text-sm text-muted-foreground">Ignorés</p>
-              <p className="text-2xl font-semibold">{report.skipped}</p>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="text-sm text-muted-foreground">Erreurs</p>
-              <p className="text-2xl font-semibold text-red-600">
-                {report.errors}
-              </p>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <StatCard label="Supprimés" value={report.deleted} tone="success" />
+            <StatCard label="Ignorés" value={report.skipped} />
+            <StatCard label="Erreurs" value={report.errors} tone="danger" />
           </div>
 
           {report.items.length > 0 && (
-            <div className="rounded-lg border border-border bg-card overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-left">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Élément</th>
-                    <th className="px-4 py-3 font-medium">Statut</th>
-                    <th className="px-4 py-3 font-medium">Message</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <Card className="overflow-hidden shadow-none">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Type</TableHead>
+                    <TableHead>Élément</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Message</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {report.items.map((item, index) => (
-                    <tr
+                    <TableRow
                       key={`${item.category}-${item.label}-${index}`}
-                      className="border-t border-border"
                     >
-                      <td className="px-4 py-3">
-                        {formatCategoryLabel(item.category)}
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs">
+                      <TableCell>{formatCategoryLabel(item.category)}</TableCell>
+                      <TableCell className="font-mono text-xs">
                         {item.label}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                            item.status === "deleted" &&
-                              "bg-emerald-100 text-emerald-800",
-                            item.status === "error" &&
-                              "bg-red-100 text-red-800",
-                            item.status === "skipped" &&
-                              "bg-muted text-muted-foreground",
-                          )}
-                        >
-                          {item.status === "deleted"
-                            ? "Supprimé"
-                            : item.status === "error"
-                              ? "Erreur"
-                              : "Ignoré"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      </TableCell>
+                      <TableCell>
+                        <ResetStatusBadge status={item.status} />
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-muted-foreground">
                         {item.message ?? "—"}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </Card>
           )}
         </div>
       )}
-    </section>
+    </div>
   )
 }

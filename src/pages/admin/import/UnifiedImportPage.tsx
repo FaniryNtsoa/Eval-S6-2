@@ -1,38 +1,24 @@
-import { useRef, useState, type ChangeEvent } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
+import { AlertTriangle, Plus, Upload } from "lucide-react"
 
 import { useUnifiedImport } from "@/modules/import/orchestrator/hooks/useUnifiedImport"
 import type { ImportReport } from "@/modules/import/common/types/import-result.types"
+import { AdminPageHeader } from "@/shared/components/layout/admin/AdminPageHeader"
+import { ImportFormModal } from "@/shared/components/layout/admin/ImportFormModal"
+import { ImportStatusBadge } from "@/shared/components/layout/admin/StatusBadge"
+import { StatCard } from "@/shared/components/layout/admin/StatCard"
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
 import { Button } from "@/shared/components/ui/button"
-import { cn } from "@/shared/lib/utils"
-
-function StatusBadge({
-  status,
-}: {
-  status: "created" | "updated" | "error"
-}) {
-  const styles = {
-    created: "bg-emerald-100 text-emerald-800",
-    updated: "bg-blue-100 text-blue-800",
-    error: "bg-red-100 text-red-800",
-  }
-
-  const labels = {
-    created: "Créé",
-    updated: "Mis à jour",
-    error: "Erreur",
-  }
-
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-        styles[status],
-      )}
-    >
-      {labels[status]}
-    </span>
-  )
-}
+import { Card, CardContent } from "@/shared/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/components/ui/table"
 
 function ReportSection({
   title,
@@ -45,249 +31,123 @@ function ReportSection({
 }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <div className="grid gap-4 sm:grid-cols-4">
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-2xl font-semibold">{report.totalRows}</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Créés</p>
-          <p className="text-2xl font-semibold text-emerald-600">
-            {report.created}
-          </p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Mis à jour</p>
-          <p className="text-2xl font-semibold text-blue-600">
-            {report.updated}
-          </p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Erreurs</p>
-          <p className="text-2xl font-semibold text-red-600">
-            {report.errors}
-          </p>
-        </div>
+      <h3 className="text-sm font-medium tracking-tight">{title}</h3>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total" value={report.totalRows} />
+        <StatCard label="Créés" value={report.created} tone="success" />
+        <StatCard label="Mis à jour" value={report.updated} tone="info" />
+        <StatCard label="Erreurs" value={report.errors} tone="danger" />
       </div>
 
       {report.rows.length > 0 && (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">Ligne</th>
-                <th className="px-4 py-3 font-medium">{identifierLabel}</th>
-                <th className="px-4 py-3 font-medium">Statut</th>
-                <th className="px-4 py-3 font-medium">ID GLPI</th>
-                <th className="px-4 py-3 font-medium">Message</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Card className="overflow-hidden shadow-none">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Ligne</TableHead>
+                <TableHead>{identifierLabel}</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>ID GLPI</TableHead>
+                <TableHead>Message</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {report.rows.map((row) => (
-                <tr key={`${title}-${row.rowIndex}`} className="border-t border-border">
-                  <td className="px-4 py-3">{row.rowIndex}</td>
-                  <td className="px-4 py-3 font-mono text-xs">
+                <TableRow key={`${title}-${row.rowIndex}`}>
+                  <TableCell>{row.rowIndex}</TableCell>
+                  <TableCell className="font-mono text-xs">
                     {row.identifier}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={row.status} />
-                  </td>
-                  <td className="px-4 py-3">{row.glpiId ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  </TableCell>
+                  <TableCell>
+                    <ImportStatusBadge status={row.status} />
+                  </TableCell>
+                  <TableCell>{row.glpiId ?? "—"}</TableCell>
+                  <TableCell className="max-w-xs truncate text-muted-foreground">
                     {row.message ?? "—"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   )
 }
 
 export function UnifiedImportPage() {
-  const assetsInputRef = useRef<HTMLInputElement>(null)
-  const ticketsInputRef = useRef<HTMLInputElement>(null)
-  const costsInputRef = useRef<HTMLInputElement>(null)
-
-  const [assetsFile, setAssetsFile] = useState<File | null>(null)
-  const [ticketsFile, setTicketsFile] = useState<File | null>(null)
-  const [costsFile, setCostsFile] = useState<File | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [modalOpen, setModalOpen] = useState(searchParams.get("new") === "1")
 
   const { progress, result, isRunning, error, reset, runImport } =
     useUnifiedImport()
 
-  const allFilesSelected = assetsFile && ticketsFile && costsFile
-
-  const handleFileChange =
-    (setter: (file: File | null) => void) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setter(event.target.files?.[0] ?? null)
-      reset()
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setModalOpen(true)
+      setSearchParams({}, { replace: true })
     }
+  }, [searchParams, setSearchParams])
 
-  const handleImport = async () => {
-    if (!assetsFile || !ticketsFile || !costsFile) {
-      return
+  useEffect(() => {
+    if (!isRunning && result?.success && modalOpen) {
+      setModalOpen(false)
     }
+  }, [isRunning, result, modalOpen])
 
-    await runImport({
-      assets: assetsFile,
-      tickets: ticketsFile,
-      costs: costsFile,
-    })
-  }
-
-  const handleResetForm = () => {
-    setAssetsFile(null)
-    setTicketsFile(null)
-    setCostsFile(null)
-    reset()
-
-    for (const ref of [assetsInputRef, ticketsInputRef, costsInputRef]) {
-      if (ref.current) {
-        ref.current.value = ""
-      }
-    }
-  }
-
-  const progressPercent =
-    progress.totalRows > 0
-      ? Math.round((progress.processedRows / progress.totalRows) * 100)
-      : progress.phase === "rollback" && progress.totalRows === 0
-        ? undefined
-        : 0
+  const hasResults =
+    result?.success &&
+    ((result.reports.assets?.totalRows ?? 0) > 0 ||
+      (result.reports.tickets?.totalRows ?? 0) > 0 ||
+      (result.reports.costs?.totalRows ?? 0) > 0)
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Import GLPI
-        </h1>
-        <p className="text-muted-foreground">
-          Importez actifs, tickets et coûts en une seule opération (ordre
-          1 → 2 → 3). En cas d&apos;erreur, un rollback automatique
-          réinitialise GLPI.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Import GLPI"
+        description="Importez actifs, tickets et coûts en une seule opération."
+      >
+        <Button onClick={() => setModalOpen(true)} disabled={isRunning}>
+          <Plus className="size-4" />
+          Nouvel import
+        </Button>
+      </AdminPageHeader>
 
-      <div className="rounded-lg border border-border bg-card p-6 space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <label
-              htmlFor="assets-csv-file"
-              className="text-sm font-medium text-foreground"
-            >
-              1. Actifs (obligatoire)
-            </label>
-            <input
-              ref={assetsInputRef}
-              id="assets-csv-file"
-              type="file"
-              accept=".csv,text/csv"
-              onChange={handleFileChange(setAssetsFile)}
-              disabled={isRunning}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
-            />
-            <p className="text-xs text-muted-foreground">
-              Doit contenir des lignes de données.
-            </p>
-          </div>
+      <ImportFormModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        isRunning={isRunning}
+        error={error}
+        progress={progress}
+        onImport={runImport}
+        onClear={reset}
+      />
 
-          <div className="space-y-2">
-            <label
-              htmlFor="tickets-csv-file"
-              className="text-sm font-medium text-foreground"
-            >
-              2. Tickets (en-tête seul OK)
-            </label>
-            <input
-              ref={ticketsInputRef}
-              id="tickets-csv-file"
-              type="file"
-              accept=".csv,text/csv"
-              onChange={handleFileChange(setTicketsFile)}
-              disabled={isRunning}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="costs-csv-file"
-              className="text-sm font-medium text-foreground"
-            >
-              3. Coûts tickets (en-tête seul OK)
-            </label>
-            <input
-              ref={costsInputRef}
-              id="costs-csv-file"
-              type="file"
-              accept=".csv,text/csv"
-              onChange={handleFileChange(setCostsFile)}
-              disabled={isRunning}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
-            />
-            <p className="text-xs text-muted-foreground">
-              Interdit si le fichier tickets est vide.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            onClick={handleImport}
-            disabled={!allFilesSelected || isRunning}
-          >
-            {isRunning ? "Import en cours…" : "Lancer l'import"}
-          </Button>
-          {allFilesSelected && !isRunning && (
-            <Button variant="outline" onClick={handleResetForm}>
-              Réinitialiser
+      {!hasResults && !isRunning && (
+        <Card className="shadow-none">
+          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+              <Upload className="size-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium">Aucun import récent</p>
+              <p className="text-sm text-muted-foreground">
+                Lancez un import pour synchroniser vos fichiers CSV avec GLPI.
+              </p>
+            </div>
+            <Button onClick={() => setModalOpen(true)}>
+              <Plus className="size-4" />
+              Lancer un import
             </Button>
-          )}
-        </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {isRunning && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{progress.message}</span>
-              {progressPercent !== undefined && (
-                <span>{progressPercent}%</span>
-              )}
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn(
-                  "h-full transition-all duration-300",
-                  progress.phase === "rollback" ? "bg-amber-500" : "bg-primary",
-                )}
-                style={{
-                  width: `${
-                    progress.phase === "rollback" && progress.totalRows === 0
-                      ? 100
-                      : progressPercent ?? 0
-                  }%`,
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </p>
-        )}
-      </div>
-
-      {result?.success && result.reports.assets && (
+      {hasResults && (
         <div className="space-y-8">
           <ReportSection
             title="Actifs"
-            report={result.reports.assets}
+            report={result.reports.assets!}
             identifierLabel="N° inventaire"
           />
           {result.reports.tickets && (
@@ -308,15 +168,16 @@ export function UnifiedImportPage() {
       )}
 
       {result && !result.success && result.reports.rollback && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2">
-          <h3 className="font-medium text-amber-900">Rollback effectué</h3>
-          <p className="text-sm text-amber-800">
+        <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <AlertTriangle className="text-amber-600 dark:text-amber-400" />
+          <AlertTitle>Rollback effectué</AlertTitle>
+          <AlertDescription className="text-amber-800 dark:text-amber-300">
             {result.reports.rollback.deleted} éléments supprimés,{" "}
             {result.reports.rollback.errors} erreur(s) pendant la
             réinitialisation.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
-    </section>
+    </div>
   )
 }

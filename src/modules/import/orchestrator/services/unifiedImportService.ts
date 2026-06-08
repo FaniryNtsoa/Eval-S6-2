@@ -3,17 +3,17 @@ import { importAssetCsvRows } from "@/modules/import/asset/services/assetImportS
 import { clearAssetNameCache } from "@/modules/import/common/services/assetNameResolver"
 import { clearCurrentUserCache } from "@/modules/import/common/services/currentUserService"
 import { getErrorMessage } from "@/modules/import/common/services/glpiResourceService"
-import type { ImportProgress } from "@/modules/import/common/types/import-result.types"
+import type {
+  ImportProgress,
+  ImportReport,
+} from "@/modules/import/common/types/import-result.types"
 import type {
   UnifiedImportFiles,
   UnifiedImportReport,
   UnifiedImportResult,
 } from "@/modules/import/orchestrator/types/unified-import.types"
 import { resetImportData } from "@/modules/import/reset/services/resetImportDataService"
-import {
-  parseTicketCostCsvFile,
-  validateCostTicketReferences,
-} from "@/modules/import/ticket-cost/services/ticketCostCsvParser"
+import { parseTicketCostCsvFile } from "@/modules/import/ticket-cost/services/ticketCostCsvParser"
 import { importTicketCostCsvRows } from "@/modules/import/ticket-cost/services/ticketCostImportService"
 import { parseTicketCsvFile } from "@/modules/import/ticket/services/ticketCsvParser"
 import { importTicketCsvRows } from "@/modules/import/ticket/services/ticketImportService"
@@ -26,6 +26,16 @@ class ImportFailedError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "ImportFailedError"
+  }
+}
+
+function emptyImportReport(): ImportReport {
+  return {
+    totalRows: 0,
+    created: 0,
+    updated: 0,
+    errors: 0,
+    rows: [],
   }
 }
 
@@ -92,17 +102,6 @@ export async function runUnifiedImport(
       parseTicketCostCsvFile(files.costs),
     ])
 
-    if (costRows.length > 0 && ticketRows.length === 0) {
-      throw new Error(
-        "Le fichier coûts contient des données mais le fichier tickets est vide.",
-      )
-    }
-
-    if (costRows.length > 0) {
-      const ticketRefs = new Set(ticketRows.map((row) => row.refTicket))
-      validateCostTicketReferences(costRows, ticketRefs)
-    }
-
     const totalRows = assetRows.length + ticketRows.length + costRows.length
 
     onProgress?.({
@@ -114,13 +113,18 @@ export async function runUnifiedImport(
       message: "Import des actifs (1/3)…",
     })
 
-    dataWritten = true
-    reports.assets = await importAssetCsvRows(assetRows, onProgress)
-    assertNoRowErrors(reports.assets, "actifs")
+    if (assetRows.length > 0) {
+      dataWritten = true
+      reports.assets = await importAssetCsvRows(assetRows, onProgress)
+      assertNoRowErrors(reports.assets, "actifs")
+    } else {
+      reports.assets = emptyImportReport()
+    }
 
     let ticketRefMap = new Map<string, number>()
 
     if (ticketRows.length > 0) {
+      dataWritten = true
       onProgress?.({
         phase: "importing",
         currentChunk: 0,
@@ -134,9 +138,12 @@ export async function runUnifiedImport(
       reports.tickets = ticketResult.report
       ticketRefMap = ticketResult.refMap
       assertNoRowErrors(reports.tickets, "tickets")
+    } else {
+      reports.tickets = emptyImportReport()
     }
 
     if (costRows.length > 0) {
+      dataWritten = true
       onProgress?.({
         phase: "importing",
         currentChunk: 0,

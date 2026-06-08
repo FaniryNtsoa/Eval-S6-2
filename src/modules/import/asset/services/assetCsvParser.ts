@@ -72,10 +72,6 @@ export function parseAssetCsv(content: string): AssetCsvRow[] {
     rows.push(row)
   })
 
-  if (rows.length === 0) {
-    throw new Error("Le fichier CSV ne contient aucune ligne de données")
-  }
-
   return rows
 }
 
