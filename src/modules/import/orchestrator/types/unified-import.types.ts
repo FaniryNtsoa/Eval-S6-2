@@ -3,12 +3,14 @@ import type { ResetReport } from "@/modules/import/common/types/import-result.ty
 
 export interface UnifiedImportFiles {
   assets: File
+  images: File
   tickets: File
   costs: File
 }
 
 export interface UnifiedImportReport {
   assets?: ImportReport
+  images?: ImportReport
   tickets?: ImportReport
   costs?: ImportReport
   rollback?: ResetReport

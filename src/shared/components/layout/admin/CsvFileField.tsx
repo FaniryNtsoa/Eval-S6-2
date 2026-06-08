@@ -18,6 +18,8 @@ interface CsvFileFieldProps {
   step: number
   label: string
   hint?: string
+  accept?: string
+  chooseLabel?: string
   file: File | null
   inputRef: RefObject<HTMLInputElement | null>
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
@@ -30,6 +32,8 @@ export function CsvFileField({
   step,
   label,
   hint,
+  accept = ".csv,text/csv",
+  chooseLabel = "Cliquer pour choisir un fichier CSV",
   file,
   inputRef,
   onChange,
@@ -97,7 +101,7 @@ export function CsvFileField({
               )}
             >
               <FileUp className="size-4" />
-              Cliquer pour choisir un fichier CSV
+              {chooseLabel}
             </button>
           )}
 
@@ -105,7 +109,7 @@ export function CsvFileField({
             ref={ref}
             id={id}
             type="file"
-            accept=".csv,text/csv"
+            accept={accept}
             onChange={onChange}
             disabled={disabled}
             className="sr-only"

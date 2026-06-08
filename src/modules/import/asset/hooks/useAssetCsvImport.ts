@@ -33,9 +33,9 @@ export function useAssetCsvImport() {
 
     try {
       const rows = await parseAssetCsvFile(file)
-      const result = await importAssetCsvRows(rows, setProgress)
-      setReport(result)
-      return result
+      const { report: importReport } = await importAssetCsvRows(rows, setProgress)
+      setReport(importReport)
+      return importReport
     } catch (importError) {
       const message = getErrorMessage(importError)
       setError(message)

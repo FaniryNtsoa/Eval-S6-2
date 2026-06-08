@@ -38,6 +38,10 @@ function formatCategoryLabel(category: string): string {
     return "Ticket"
   }
 
+  if (category === "document") {
+    return "Document (image)"
+  }
+
   if (category.startsWith("dropdown-")) {
     return `Référence · ${category.replace("dropdown-", "")}`
   }

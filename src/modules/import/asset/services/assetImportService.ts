@@ -27,10 +27,15 @@ import { runConcurrent } from "@/modules/import/common/utils/runConcurrent"
 import { buildAssetPayload } from "@/modules/import/asset/services/assetPayloadBuilder"
 import { validateAllRowsAgainstSchema } from "@/modules/import/asset/services/assetRowValidator"
 import { warmCachesForRows } from "@/modules/import/asset/services/assetWarmCache"
+import type { AssetNameRefMap } from "@/modules/import/asset-images/types/asset-image.types"
 import type { AssetCsvRow } from "@/modules/import/asset/types/asset-csv.types"
 import { useAuthStore } from "@/services/stores/authStore"
 
 type ProgressCallback = (progress: ImportProgress) => void
+
+function assetNameKey(name: string): string {
+  return name.trim().toLowerCase()
+}
 
 async function findExistingAssetId(
   cache: ReferenceCache,
@@ -62,6 +67,7 @@ async function importRow(
   row: AssetCsvRow,
   registry: AssetRegistry,
   cache: ReferenceCache,
+  nameRefMap: AssetNameRefMap,
 ): Promise<ImportRowResult> {
   try {
     const entry = getAssetEntry(registry, row.itemType)
@@ -86,6 +92,10 @@ async function importRow(
     if (existingId) {
       await patchItem(entry.assetEndpoint, existingId, payload)
       cache.setAsset(row.itemType, row.inventoryNumber, existingId)
+      nameRefMap.set(assetNameKey(row.name), {
+        itemType: row.itemType,
+        id: existingId,
+      })
 
       return {
         rowIndex: row.rowIndex,
@@ -97,6 +107,10 @@ async function importRow(
 
     const created = await createItem(entry.assetEndpoint, payload)
     cache.setAsset(row.itemType, row.inventoryNumber, created.id)
+    nameRefMap.set(assetNameKey(row.name), {
+      itemType: row.itemType,
+      id: created.id,
+    })
 
     return {
       rowIndex: row.rowIndex,
@@ -127,7 +141,7 @@ function buildReport(rows: ImportRowResult[], totalRows: number): ImportReport {
 export async function importAssetCsvRows(
   rows: AssetCsvRow[],
   onProgress?: ProgressCallback,
-): Promise<ImportReport> {
+): Promise<{ report: ImportReport; nameRefMap: AssetNameRefMap }> {
   const sessionReady = await useAuthStore.getState().ensureSession()
 
   if (!sessionReady) {
@@ -135,6 +149,7 @@ export async function importAssetCsvRows(
   }
 
   const cache = new ReferenceCache()
+  const nameRefMap: AssetNameRefMap = new Map()
   const chunks = chunkArray(rows, IMPORT_CHUNK_SIZE)
 
   onProgress?.({
@@ -178,7 +193,7 @@ export async function importAssetCsvRows(
     const chunkResults = await runConcurrent(
       chunk,
       IMPORT_CONCURRENCY,
-      (row) => importRow(row, registry, cache),
+      (row) => importRow(row, registry, cache, nameRefMap),
     )
 
     allResults.push(...chunkResults)
@@ -205,5 +220,5 @@ export async function importAssetCsvRows(
     message: `Import terminé : ${report.created} créés, ${report.updated} mis à jour, ${report.errors} erreurs`,
   })
 
-  return report
+  return { report, nameRefMap }
 }

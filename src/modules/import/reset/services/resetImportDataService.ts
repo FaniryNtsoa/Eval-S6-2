@@ -30,6 +30,7 @@ interface DeleteTask {
 }
 
 const USER_ENDPOINT = "/Administration/User"
+const DOCUMENT_ENDPOINT = "/Management/Document"
 
 function isProtectedUsername(username?: string): boolean {
   if (!username) {
@@ -135,6 +136,45 @@ async function collectTickets(): Promise<
     })),
     errors: [],
     tickets,
+  }
+}
+
+async function collectDocuments(): Promise<CollectResult> {
+  const [activeResult, trashResult] = await Promise.all([
+    tryListPaginated<GlpiListItem>(DOCUMENT_ENDPOINT),
+    tryListPaginated<GlpiListItem>(DOCUMENT_ENDPOINT, {
+      filter: TRASH_ONLY_FILTER,
+    }),
+  ])
+
+  if (activeResult.error && trashResult.error) {
+    return {
+      tasks: [],
+      errors: [
+        {
+          category: "document",
+          label: DOCUMENT_ENDPOINT,
+          status: "error",
+          message: `Collecte impossible : ${activeResult.error}`,
+        },
+      ],
+    }
+  }
+
+  const documents = dedupeById([...activeResult.items, ...trashResult.items])
+
+  return {
+    tasks: documents.map((document) => {
+      const trashLabel = document.is_deleted ? " (corbeille)" : ""
+
+      return {
+        category: "document",
+        endpoint: DOCUMENT_ENDPOINT,
+        id: document.id,
+        label: `${document.name ?? document.id}${trashLabel}`,
+      }
+    }),
+    errors: [],
   }
 }
 
@@ -306,6 +346,7 @@ export async function resetImportData(
 
   const ticketCollection = await collectTickets()
   const ticketCostCollection = await collectTicketCosts(ticketCollection.tickets)
+  const documentCollection = await collectDocuments()
   const assetCollection = await collectAssets(targets.assetEndpoints)
   const userCollection = await collectUsers()
   const dropdownCollection = await collectDropdowns(targets.dropdownEndpoints)
@@ -313,6 +354,7 @@ export async function resetImportData(
   const collectionErrors = [
     ...ticketCollection.errors,
     ...ticketCostCollection.errors,
+    ...documentCollection.errors,
     ...assetCollection.errors,
     ...userCollection.errors,
     ...dropdownCollection.errors,
@@ -321,6 +363,7 @@ export async function resetImportData(
   const total =
     ticketCostCollection.tasks.length +
     ticketCollection.tasks.length +
+    documentCollection.tasks.length +
     assetCollection.tasks.length +
     userCollection.tasks.length +
     dropdownCollection.tasks.length
@@ -350,6 +393,10 @@ export async function resetImportData(
       tasks: ticketCostCollection.tasks,
     },
     { name: "Suppression des tickets…", tasks: ticketCollection.tasks },
+    {
+      name: "Suppression des documents (images)…",
+      tasks: documentCollection.tasks,
+    },
     { name: "Suppression des actifs…", tasks: assetCollection.tasks },
     { name: "Suppression des utilisateurs…", tasks: userCollection.tasks },
     { name: "Suppression des références…", tasks: dropdownCollection.tasks },

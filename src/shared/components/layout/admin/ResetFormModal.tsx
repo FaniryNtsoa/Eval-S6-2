@@ -22,6 +22,7 @@ const CONFIRMATION_TEXT = "RESET"
 
 const deletionTargets = [
   "Coûts tickets, puis tickets (corbeille incluse)",
+  "Documents liés aux actifs (images importées, corbeille incluse)",
   "Actifs supportés (suppression définitive)",
   "Utilisateurs sauf comptes système et API",
   "Références liées aux imports",

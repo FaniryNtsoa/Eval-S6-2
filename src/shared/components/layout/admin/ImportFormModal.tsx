@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from "react"
 import { AlertTriangle, FileSpreadsheet, Info } from "lucide-react"
 
 import type { ImportProgress } from "@/modules/import/common/types/import-result.types"
+import type { UnifiedImportFiles } from "@/modules/import/orchestrator/types/unified-import.types"
 import { CsvFileField } from "@/shared/components/layout/admin/CsvFileField"
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
 import { Button } from "@/shared/components/ui/button"
@@ -23,11 +24,7 @@ interface ImportFormModalProps {
   isRunning: boolean
   error: string | null
   progress: ImportProgress
-  onImport: (files: {
-    assets: File
-    tickets: File
-    costs: File
-  }) => Promise<unknown>
+  onImport: (files: UnifiedImportFiles) => Promise<unknown>
   onClear: () => void
 }
 
@@ -38,20 +35,35 @@ const fileFields = [
     label: "Actifs",
     hint: "En-tête seul accepté. Si vide, les tickets et coûts qui en dépendent échoueront.",
     key: "assets" as const,
+    accept: ".csv,text/csv",
+    chooseLabel: "Cliquer pour choisir un fichier CSV",
+  },
+  {
+    id: "modal-images-zip",
+    step: 2,
+    label: "Images actifs",
+    hint: "Archive ZIP obligatoire. Peut être vide — les images sont nommées comme la colonne Name (ex. PC-ADM-001.png).",
+    key: "images" as const,
+    accept: ".zip,application/zip",
+    chooseLabel: "Cliquer pour choisir une archive ZIP",
   },
   {
     id: "modal-tickets-csv",
-    step: 2,
+    step: 3,
     label: "Tickets",
     hint: "En-tête seul accepté. Si vide, les coûts qui référencent des tickets échoueront.",
     key: "tickets" as const,
+    accept: ".csv,text/csv",
+    chooseLabel: "Cliquer pour choisir un fichier CSV",
   },
   {
     id: "modal-costs-csv",
-    step: 3,
+    step: 4,
     label: "Coûts tickets",
     hint: "En-tête seul accepté. Nécessite des tickets correspondants si des lignes sont présentes.",
     key: "costs" as const,
+    accept: ".csv,text/csv",
+    chooseLabel: "Cliquer pour choisir un fichier CSV",
   },
 ]
 
@@ -65,33 +77,38 @@ export function ImportFormModal({
   onClear,
 }: ImportFormModalProps) {
   const assetsInputRef = useRef<HTMLInputElement>(null)
+  const imagesInputRef = useRef<HTMLInputElement>(null)
   const ticketsInputRef = useRef<HTMLInputElement>(null)
   const costsInputRef = useRef<HTMLInputElement>(null)
 
   const inputRefs = {
     assets: assetsInputRef,
+    images: imagesInputRef,
     tickets: ticketsInputRef,
     costs: costsInputRef,
   }
 
   const [assetsFile, setAssetsFile] = useState<File | null>(null)
+  const [imagesFile, setImagesFile] = useState<File | null>(null)
   const [ticketsFile, setTicketsFile] = useState<File | null>(null)
   const [costsFile, setCostsFile] = useState<File | null>(null)
 
   const files = {
     assets: assetsFile,
+    images: imagesFile,
     tickets: ticketsFile,
     costs: costsFile,
   }
 
   const setters = {
     assets: setAssetsFile,
+    images: setImagesFile,
     tickets: setTicketsFile,
     costs: setCostsFile,
   }
 
-  const allFilesSelected = assetsFile && ticketsFile && costsFile
-  const selectedCount = [assetsFile, ticketsFile, costsFile].filter(Boolean).length
+  const allFilesSelected = assetsFile && imagesFile && ticketsFile && costsFile
+  const selectedCount = Object.values(files).filter(Boolean).length
 
   const handleFileChange =
     (key: keyof typeof files) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +127,7 @@ export function ImportFormModal({
 
   const clearAllFiles = () => {
     setAssetsFile(null)
+    setImagesFile(null)
     setTicketsFile(null)
     setCostsFile(null)
     onClear()
@@ -134,12 +152,13 @@ export function ImportFormModal({
   }
 
   const handleImport = async () => {
-    if (!assetsFile || !ticketsFile || !costsFile) {
+    if (!assetsFile || !imagesFile || !ticketsFile || !costsFile) {
       return
     }
 
     await onImport({
       assets: assetsFile,
+      images: imagesFile,
       tickets: ticketsFile,
       costs: costsFile,
     })
@@ -168,9 +187,9 @@ export function ImportFormModal({
             Import GLPI
           </DialogTitle>
           <DialogDescription className="text-left">
-            Sélectionnez les trois fichiers CSV dans l&apos;ordre. Chaque fichier
-            peut ne contenir que l&apos;en-tête — les phases suivantes
-            échoueront alors et déclencheront un rollback si nécessaire.
+            Sélectionnez les quatre fichiers dans l&apos;ordre. Les CSV peuvent
+            ne contenir que l&apos;en-tête ; le ZIP images est obligatoire mais
+            peut être vide.
           </DialogDescription>
         </DialogHeader>
 
@@ -179,7 +198,7 @@ export function ImportFormModal({
             <Info className="size-4" />
             <AlertTitle className="text-sm">Ordre d&apos;exécution</AlertTitle>
             <AlertDescription>
-              Actifs → Tickets → Coûts. Des données en aval sans amont
+              Actifs → Images → Tickets → Coûts. Des données en aval sans amont
               correspondant provoquent une erreur et un rollback automatique.
             </AlertDescription>
           </Alert>
@@ -192,6 +211,8 @@ export function ImportFormModal({
                 step={field.step}
                 label={field.label}
                 hint={field.hint}
+                accept={field.accept}
+                chooseLabel={field.chooseLabel}
                 file={files[field.key]}
                 inputRef={inputRefs[field.key]}
                 onChange={handleFileChange(field.key)}
@@ -236,7 +257,7 @@ export function ImportFormModal({
 
         <DialogFooter className="flex-row items-center justify-between gap-2 border-t bg-muted/20 px-6 py-4 sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            {selectedCount}/3 fichiers sélectionnés
+            {selectedCount}/4 fichiers sélectionnés
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <Button

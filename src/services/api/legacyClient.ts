@@ -18,9 +18,8 @@ interface RetryableConfig extends AxiosRequestConfig {
 let sessionToken: string | null = null
 let initPromise: Promise<string> | null = null
 
-function buildLegacyHeaders(): Record<string, string> {
+function buildLegacyAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     Accept: "application/json",
   }
 
@@ -33,6 +32,13 @@ function buildLegacyHeaders(): Record<string, string> {
   }
 
   return headers
+}
+
+function buildLegacyHeaders(): Record<string, string> {
+  return {
+    ...buildLegacyAuthHeaders(),
+    "Content-Type": "application/json",
+  }
 }
 
 async function initLegacySession(): Promise<string> {
@@ -145,4 +151,86 @@ export async function legacyList<T>(
   }
 
   return data
+}
+
+interface LegacyDocumentUploadResponse {
+  id: number
+  upload_result?: {
+    filename?: Array<{ error?: string; display?: string }>
+  }
+}
+
+export interface LegacyUploadDocumentOptions {
+  documenttypesId: number
+}
+
+function parseLegacyDocumentUploadResponse(
+  data: LegacyDocumentUploadResponse | LegacyDocumentUploadResponse[],
+): LegacyDocumentUploadResponse {
+  const document = Array.isArray(data) ? data[0] : data
+
+  if (!document?.id) {
+    throw new Error("Réponse GLPI invalide lors de l'upload du document")
+  }
+
+  const uploadError = document.upload_result?.filename?.[0]?.error
+
+  if (uploadError) {
+    throw new Error(`Upload refusé par GLPI : ${uploadError}`)
+  }
+
+  return document
+}
+
+export async function legacyUploadDocument(
+  file: Blob,
+  filename: string,
+  options: LegacyUploadDocumentOptions,
+): Promise<LegacyDocumentUploadResponse> {
+  await ensureLegacySession()
+
+  const formData = new FormData()
+  const manifest = JSON.stringify({
+    input: {
+      name: filename,
+      _filename: [filename],
+      documenttypes_id: options.documenttypesId,
+    },
+  })
+
+  formData.append("uploadManifest", manifest)
+  formData.append("filename[0]", file, filename)
+
+  const config: RetryableConfig = {
+    method: "POST",
+    url: `${env.glpiLegacyApiUrl}/Document/`,
+    headers: buildLegacyAuthHeaders(),
+    data: formData,
+  }
+
+  try {
+    const response = await axios.request<
+      LegacyDocumentUploadResponse | LegacyDocumentUploadResponse[]
+    >(config)
+
+    return parseLegacyDocumentUploadResponse(response.data)
+  } catch (error) {
+    const axiosError = error as AxiosError
+    const status = axiosError.response?.status
+
+    if (status === 401 && !config._retry) {
+      clearLegacySession()
+      config._retry = true
+      await ensureLegacySession()
+      config.headers = buildLegacyAuthHeaders()
+
+      const response = await axios.request<
+        LegacyDocumentUploadResponse | LegacyDocumentUploadResponse[]
+      >(config)
+
+      return parseLegacyDocumentUploadResponse(response.data)
+    }
+
+    throw new Error(getErrorMessage(error))
+  }
 }

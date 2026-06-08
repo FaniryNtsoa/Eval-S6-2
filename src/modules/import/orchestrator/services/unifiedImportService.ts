@@ -1,3 +1,6 @@
+import { importAssetImages } from "@/modules/import/asset-images/services/assetImageImportService"
+import { parseImageZipFile } from "@/modules/import/asset-images/services/imageZipParser"
+import type { AssetNameRefMap } from "@/modules/import/asset-images/types/asset-image.types"
 import { parseAssetCsvFile } from "@/modules/import/asset/services/assetCsvParser"
 import { importAssetCsvRows } from "@/modules/import/asset/services/assetImportService"
 import { clearAssetNameCache } from "@/modules/import/common/services/assetNameResolver"
@@ -39,10 +42,16 @@ function emptyImportReport(): ImportReport {
   }
 }
 
-function assertNoRowErrors(report: { errors: number }, phaseLabel: string): void {
+function assertNoRowErrors(
+  report: { errors: number; rows?: Array<{ message?: string }> },
+  phaseLabel: string,
+): void {
   if (report.errors > 0) {
+    const firstError = report.rows?.find((row) => row.message)?.message
+    const details = firstError ? ` — ${firstError}` : ""
+
     throw new ImportFailedError(
-      `Échec phase ${phaseLabel} : ${report.errors} ligne(s) en erreur`,
+      `Échec phase ${phaseLabel} : ${report.errors} ligne(s) en erreur${details}`,
     )
   }
 }
@@ -96,13 +105,15 @@ export async function runUnifiedImport(
       message: "Validation des fichiers CSV…",
     })
 
-    const [assetRows, ticketRows, costRows] = await Promise.all([
+    const [assetRows, imageRows, ticketRows, costRows] = await Promise.all([
       parseAssetCsvFile(files.assets),
+      parseImageZipFile(files.images),
       parseTicketCsvFile(files.tickets),
       parseTicketCostCsvFile(files.costs),
     ])
 
-    const totalRows = assetRows.length + ticketRows.length + costRows.length
+    const totalRows =
+      assetRows.length + imageRows.length + ticketRows.length + costRows.length
 
     onProgress?.({
       phase: "importing",
@@ -110,15 +121,40 @@ export async function runUnifiedImport(
       totalChunks: 0,
       processedRows: 0,
       totalRows,
-      message: "Import des actifs (1/3)…",
+      message: "Import des actifs (1/4)…",
     })
+
+    let assetNameRefMap: AssetNameRefMap = new Map()
 
     if (assetRows.length > 0) {
       dataWritten = true
-      reports.assets = await importAssetCsvRows(assetRows, onProgress)
+      const assetResult = await importAssetCsvRows(assetRows, onProgress)
+      reports.assets = assetResult.report
+      assetNameRefMap = assetResult.nameRefMap
       assertNoRowErrors(reports.assets, "actifs")
     } else {
       reports.assets = emptyImportReport()
+    }
+
+    onProgress?.({
+      phase: "importing",
+      currentChunk: 0,
+      totalChunks: 0,
+      processedRows: assetRows.length,
+      totalRows,
+      message: "Import des images actifs (2/4)…",
+    })
+
+    if (imageRows.length > 0) {
+      dataWritten = true
+      reports.images = await importAssetImages(
+        imageRows,
+        assetNameRefMap,
+        onProgress,
+      )
+      assertNoRowErrors(reports.images, "images")
+    } else {
+      reports.images = emptyImportReport()
     }
 
     let ticketRefMap = new Map<string, number>()
@@ -129,9 +165,9 @@ export async function runUnifiedImport(
         phase: "importing",
         currentChunk: 0,
         totalChunks: 0,
-        processedRows: assetRows.length,
+        processedRows: assetRows.length + imageRows.length,
         totalRows,
-        message: "Import des tickets (2/3)…",
+        message: "Import des tickets (3/4)…",
       })
 
       const ticketResult = await importTicketCsvRows(ticketRows, onProgress)
@@ -148,9 +184,9 @@ export async function runUnifiedImport(
         phase: "importing",
         currentChunk: 0,
         totalChunks: 0,
-        processedRows: assetRows.length + ticketRows.length,
+        processedRows: assetRows.length + imageRows.length + ticketRows.length,
         totalRows,
-        message: "Import des coûts tickets (3/3)…",
+        message: "Import des coûts tickets (4/4)…",
       })
 
       reports.costs = await importTicketCostCsvRows(

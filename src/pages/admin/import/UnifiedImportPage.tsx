@@ -99,6 +99,7 @@ export function UnifiedImportPage() {
   const hasResults =
     result?.success &&
     ((result.reports.assets?.totalRows ?? 0) > 0 ||
+      (result.reports.images?.totalRows ?? 0) > 0 ||
       (result.reports.tickets?.totalRows ?? 0) > 0 ||
       (result.reports.costs?.totalRows ?? 0) > 0)
 
@@ -106,7 +107,7 @@ export function UnifiedImportPage() {
     <div className="page-shell">
       <AdminPageHeader
         title="Import GLPI"
-        description="Importez actifs, tickets et coûts en une seule opération."
+        description="Importez actifs, images, tickets et coûts en une seule opération."
       >
         <Button onClick={() => setModalOpen(true)} disabled={isRunning}>
           <Plus className="size-4" />
@@ -149,6 +150,13 @@ export function UnifiedImportPage() {
             report={result.reports.assets!}
             identifierLabel="N° inventaire"
           />
+          {result.reports.images && result.reports.images.totalRows > 0 && (
+            <ReportSection
+              title="Images actifs"
+              report={result.reports.images}
+              identifierLabel="Name"
+            />
+          )}
           {result.reports.tickets && (
             <ReportSection
               title="Tickets"

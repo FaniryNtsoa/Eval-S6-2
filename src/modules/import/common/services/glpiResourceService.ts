@@ -156,13 +156,29 @@ export async function fetchOpenApiSpec() {
   return data
 }
 
+function formatGlpiErrorBody(data: unknown): string | undefined {
+  if (Array.isArray(data)) {
+    const [, message] = data
+    return typeof message === "string" ? message : data.join(" · ")
+  }
+
+  if (data && typeof data === "object") {
+    const body = data as {
+      detail?: string
+      title?: string
+      message?: string
+    }
+
+    return body.detail ?? body.title ?? body.message
+  }
+
+  return undefined
+}
+
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { detail?: string; title?: string; message?: string }
-      | undefined
-
-    return data?.detail ?? data?.title ?? data?.message ?? error.message
+    const formatted = formatGlpiErrorBody(error.response?.data)
+    return formatted ?? error.message
   }
 
   if (error instanceof Error) {
