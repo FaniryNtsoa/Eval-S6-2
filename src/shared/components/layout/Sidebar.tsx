@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LogOut,
   RotateCcw,
+  Ticket,
   Upload,
 } from "lucide-react"
 
@@ -26,6 +27,7 @@ import {
 
 const navItems = [
   { to: ROUTES.admin.dashboard, label: "Tableau de bord", icon: LayoutDashboard },
+  { to: ROUTES.admin.tickets, label: "Tickets", icon: Ticket },
   { to: ROUTES.admin.import, label: "Import", icon: Upload },
   { to: ROUTES.admin.resetData, label: "Réinitialiser", icon: RotateCcw },
 ]

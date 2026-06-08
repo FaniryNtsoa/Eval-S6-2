@@ -49,10 +49,10 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted/40 px-4">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-linear-to-b from-muted/50 to-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
             <Database className="size-5" />
           </div>
           <div className="space-y-1">
@@ -63,9 +63,9 @@ export function Login() {
           </div>
         </div>
 
-        <Card className="shadow-sm">
+        <Card>
           <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2 text-base">
+            <CardTitle className="flex items-center justify-center gap-2">
               <Lock className="size-4 text-muted-foreground" />
               Connexion
             </CardTitle>
@@ -85,6 +85,7 @@ export function Login() {
                   onChange={(event) => setCode(event.target.value)}
                   autoComplete="off"
                   aria-invalid={!!error}
+                  className="h-10"
                 />
               </div>
 

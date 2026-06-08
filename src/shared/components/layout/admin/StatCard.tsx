@@ -24,7 +24,7 @@ const toneStyles = {
 
 export function StatCard({ label, value, icon: Icon, tone = "default" }: StatCardProps) {
   return (
-    <Card size="sm" className="shadow-none">
+    <Card size="sm" className="transition-colors hover:bg-muted/20">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
         <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {label}

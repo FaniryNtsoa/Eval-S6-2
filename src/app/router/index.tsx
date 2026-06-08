@@ -8,6 +8,7 @@ import { Login } from "@/pages/admin/auth/Login"
 import { DashboardPage } from "@/pages/admin/dashboard/DashboardPage"
 import { UnifiedImportPage } from "@/pages/admin/import/UnifiedImportPage"
 import { ResetDataPage } from "@/pages/admin/reset/ResetDataPage"
+import { TicketsPage } from "@/pages/admin/tickets/TicketsPage"
 import { HomePage } from "@/pages/public/home/HomePage"
 import { ROUTES } from "@/shared/constants/routes"
 
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
               {
                 path: "dashboard",
                 element: <DashboardPage />,
+              },
+              {
+                path: "tickets",
+                element: <TicketsPage />,
               },
               {
                 path: "import",

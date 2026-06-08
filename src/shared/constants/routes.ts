@@ -4,6 +4,7 @@ export const ROUTES = {
     root: "/admin",
     login: "/admin/login",
     dashboard: "/admin/dashboard",
+    tickets: "/admin/tickets",
     import: "/admin/import",
     resetData: "/admin/reset",
   },

@@ -13,6 +13,7 @@ import { ROUTES } from "@/shared/constants/routes"
 
 const pageTitles: Record<string, string> = {
   [ROUTES.admin.dashboard]: "Tableau de bord",
+  [ROUTES.admin.tickets]: "Tickets",
   [ROUTES.admin.import]: "Import GLPI",
   [ROUTES.admin.resetData]: "Réinitialisation",
 }
@@ -24,8 +25,8 @@ export function AdminLayout() {
   return (
     <SidebarProvider>
       <AdminSidebar />
-      <SidebarInset className="bg-muted/40">
-        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/90 px-4 backdrop-blur-sm md:px-6">
+      <SidebarInset className="bg-linear-to-b from-muted/50 to-background">
+        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md md:px-6">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <span className="text-sm font-medium text-muted-foreground">
@@ -42,7 +43,7 @@ export function AdminLayout() {
         </header>
 
         <div className="flex flex-1 flex-col p-4 md:p-6 lg:p-8">
-          <div className="mx-auto w-full max-w-5xl flex-1">
+          <div className="mx-auto w-full max-w-6xl flex-1">
             <Outlet />
           </div>
         </div>

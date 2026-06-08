@@ -5,6 +5,7 @@ import { AlertTriangle, Plus, Upload } from "lucide-react"
 import { useUnifiedImport } from "@/modules/import/orchestrator/hooks/useUnifiedImport"
 import type { ImportReport } from "@/modules/import/common/types/import-result.types"
 import { AdminPageHeader } from "@/shared/components/layout/admin/AdminPageHeader"
+import { EmptyState } from "@/shared/components/layout/admin/EmptyState"
 import { ImportFormModal } from "@/shared/components/layout/admin/ImportFormModal"
 import { ImportStatusBadge } from "@/shared/components/layout/admin/StatusBadge"
 import { StatCard } from "@/shared/components/layout/admin/StatCard"
@@ -31,7 +32,7 @@ function ReportSection({
 }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium tracking-tight">{title}</h3>
+      <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total" value={report.totalRows} />
         <StatCard label="Créés" value={report.created} tone="success" />
@@ -40,7 +41,7 @@ function ReportSection({
       </div>
 
       {report.rows.length > 0 && (
-        <Card className="overflow-hidden shadow-none">
+        <Card className="overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -102,7 +103,7 @@ export function UnifiedImportPage() {
       (result.reports.costs?.totalRows ?? 0) > 0)
 
   return (
-    <div className="space-y-8">
+    <div className="page-shell">
       <AdminPageHeader
         title="Import GLPI"
         description="Importez actifs, tickets et coûts en une seule opération."
@@ -124,21 +125,19 @@ export function UnifiedImportPage() {
       />
 
       {!hasResults && !isRunning && (
-        <Card className="shadow-none">
-          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-              <Upload className="size-5 text-muted-foreground" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium">Aucun import récent</p>
-              <p className="text-sm text-muted-foreground">
-                Lancez un import pour synchroniser vos fichiers CSV avec GLPI.
-              </p>
-            </div>
-            <Button onClick={() => setModalOpen(true)}>
-              <Plus className="size-4" />
-              Lancer un import
-            </Button>
+        <Card>
+          <CardContent>
+            <EmptyState
+              icon={Upload}
+              title="Aucun import récent"
+              description="Lancez un import pour synchroniser vos fichiers CSV avec GLPI."
+              action={
+                <Button onClick={() => setModalOpen(true)}>
+                  <Plus className="size-4" />
+                  Lancer un import
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       )}

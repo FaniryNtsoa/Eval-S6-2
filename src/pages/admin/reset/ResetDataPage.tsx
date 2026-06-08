@@ -4,6 +4,7 @@ import { Plus, RotateCcw, ShieldAlert } from "lucide-react"
 
 import { useResetImportData } from "@/modules/import/reset/hooks/useResetImportData"
 import { AdminPageHeader } from "@/shared/components/layout/admin/AdminPageHeader"
+import { EmptyState } from "@/shared/components/layout/admin/EmptyState"
 import { ResetFormModal } from "@/shared/components/layout/admin/ResetFormModal"
 import { ResetStatusBadge } from "@/shared/components/layout/admin/StatusBadge"
 import { StatCard } from "@/shared/components/layout/admin/StatCard"
@@ -69,7 +70,7 @@ export function ResetDataPage() {
   }, [isRunning, report, modalOpen])
 
   return (
-    <div className="space-y-8">
+    <div className="page-shell">
       <AdminPageHeader
         title="Réinitialiser les données GLPI"
         description="Supprime toutes les données gérées par les imports de l'application."
@@ -94,9 +95,9 @@ export function ResetDataPage() {
         onClear={reset}
       />
 
-      <Card className="border-destructive/25 shadow-none">
+      <Card className="border-destructive/30 bg-destructive/3">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-destructive">
+          <CardTitle className="flex items-center gap-2 text-destructive">
             <ShieldAlert className="size-4" />
             Zone de danger
           </CardTitle>
@@ -108,17 +109,11 @@ export function ResetDataPage() {
         </CardHeader>
         <CardContent>
           {!report && !isRunning && (
-            <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                <RotateCcw className="size-5 text-muted-foreground" />
-              </div>
-              <div className="space-y-1">
-                <p className="font-medium">Aucune réinitialisation récente</p>
-                <p className="text-sm text-muted-foreground">
-                  Utilisez le bouton ci-dessus pour lancer une suppression.
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              icon={RotateCcw}
+              title="Aucune réinitialisation récente"
+              description="Utilisez le bouton ci-dessus pour lancer une suppression."
+            />
           )}
         </CardContent>
       </Card>
@@ -132,7 +127,7 @@ export function ResetDataPage() {
           </div>
 
           {report.items.length > 0 && (
-            <Card className="overflow-hidden shadow-none">
+            <Card className="overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
