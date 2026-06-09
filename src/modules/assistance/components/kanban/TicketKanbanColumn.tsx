@@ -4,11 +4,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 
+import type { KanbanStatusId } from "@/modules/assistance/constants/kanban"
+import type { KanbanColumnConfig } from "@/modules/kanban-config/types/kanban-config.types"
 import {
-  KANBAN_COLUMN_STYLES,
-  KANBAN_STATUS_LABELS,
-  type KanbanStatusId,
-} from "@/modules/assistance/constants/kanban"
+  darkenHexColor,
+  formatBilingualLabel,
+} from "@/modules/kanban-config/utils/color"
 import { TicketKanbanCard } from "@/modules/assistance/components/kanban/TicketKanbanCard"
 import type { GlpiTicketListItem } from "@/modules/assistance/types/ticket.types"
 import { Badge } from "@/shared/components/ui/badge"
@@ -19,6 +20,7 @@ import { Plus } from "lucide-react"
 
 interface TicketKanbanColumnProps {
   statusId: KanbanStatusId
+  columnConfig: KanbanColumnConfig
   tickets: GlpiTicketListItem[]
   isLoading: boolean
   onOpenTicket: (ticketId: number) => void
@@ -27,12 +29,18 @@ interface TicketKanbanColumnProps {
 
 export function TicketKanbanColumn({
   statusId,
+  columnConfig,
   tickets,
   isLoading,
   onOpenTicket,
   onAddTicket,
 }: TicketKanbanColumnProps) {
-  const styles = KANBAN_COLUMN_STYLES[statusId]
+  const backgroundColor = columnConfig.backgroundColor
+  const dotColor = darkenHexColor(backgroundColor)
+  const columnLabel = formatBilingualLabel(
+    columnConfig.labelMg,
+    columnConfig.labelFr,
+  )
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${statusId}`,
     data: { type: "column", statusId },
@@ -41,16 +49,15 @@ export function TicketKanbanColumn({
   return (
     <section className="flex min-h-[420px] min-w-[280px] flex-1 flex-col">
       <header
-        className={cn(
-          "mb-3 flex items-center justify-between rounded-xl border px-4 py-3",
-          styles.header,
-        )}
+        className="mb-3 flex items-center justify-between rounded-xl border px-4 py-3"
+        style={{ backgroundColor }}
       >
         <div className="flex items-center gap-2">
-          <span className={cn("size-2.5 rounded-full", styles.dot)} />
-          <h2 className="text-sm font-semibold">
-            {KANBAN_STATUS_LABELS[statusId]}
-          </h2>
+          <span
+            className="size-2.5 rounded-full"
+            style={{ backgroundColor: dotColor }}
+          />
+          <h2 className="text-sm font-semibold">{columnLabel}</h2>
         </div>
         <Badge variant="secondary" className="tabular-nums">
           {isLoading ? "…" : tickets.length}
@@ -60,10 +67,10 @@ export function TicketKanbanColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex flex-1 flex-col gap-2 rounded-xl border border-dashed border-border/60 bg-muted/15 p-2 transition-colors",
-          styles.body,
-          isOver && "border-primary/50 bg-primary/5",
+          "flex flex-1 flex-col gap-2 rounded-xl border border-dashed border-border/60 p-2 transition-colors",
+          isOver && "border-primary/50",
         )}
+        style={{ backgroundColor }}
       >
         {onAddTicket && !isLoading && (
     <Button

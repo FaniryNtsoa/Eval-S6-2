@@ -27,4 +27,6 @@ export const env = {
     import.meta.env.VITE_GLPI_LEGACY_API_URL ?? "/api/glpi-legacy",
   glpiAppToken: import.meta.env.VITE_GLPI_APP_TOKEN ?? "",
   glpiUserToken: import.meta.env.VITE_GLPI_USER_TOKEN ?? "",
+  kanbanConfigApiUrl:
+    import.meta.env.VITE_KANBAN_CONFIG_API_URL ?? "/api/kanban-config",
 } as const

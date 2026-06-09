@@ -30,6 +30,10 @@ export default defineConfig(({ mode }) => {
           rewrite: (requestPath) =>
             requestPath.replace(/^\/api\/glpi/, "/api.php"),
         },
+        "/api/kanban-config": {
+          target: "http://localhost:8081",
+          changeOrigin: true,
+        },
       },
     },
   }

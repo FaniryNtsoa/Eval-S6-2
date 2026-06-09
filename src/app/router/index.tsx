@@ -8,6 +8,7 @@ import { Login } from "@/pages/admin/auth/Login"
 import { DashboardPage } from "@/pages/admin/dashboard/DashboardPage"
 import { UnifiedImportPage } from "@/pages/admin/import/UnifiedImportPage"
 import { ResetDataPage } from "@/pages/admin/reset/ResetDataPage"
+import { KanbanSettingsPage } from "@/pages/admin/kanban-settings/KanbanSettingsPage"
 import { TicketsPage } from "@/pages/admin/tickets/TicketsPage"
 import { ElementsPage } from "@/pages/public/elements/ElementsPage"
 import { HomePage } from "@/pages/public/home/HomePage"
@@ -65,6 +66,10 @@ export const router = createBrowserRouter([
               {
                 path: "reset",
                 element: <ResetDataPage />,
+              },
+              {
+                path: "kanban-settings",
+                element: <KanbanSettingsPage />,
               },
             ],
           },

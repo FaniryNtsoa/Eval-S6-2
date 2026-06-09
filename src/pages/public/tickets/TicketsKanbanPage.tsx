@@ -1,9 +1,11 @@
 import { useEffect } from "react"
-import { Plus, RefreshCw, Ticket } from "lucide-react"
+import { RefreshCw, Ticket } from "lucide-react"
 
 import { TicketKanbanBoard } from "@/modules/assistance/components/kanban/TicketKanbanBoard"
 import type { KanbanStatusId } from "@/modules/assistance/constants/kanban"
 import { useCreateTicketModal } from "@/modules/assistance/context/CreateTicketModalContext"
+import { useKanbanConfig } from "@/modules/kanban-config/hooks/useKanbanConfig"
+import { buildColumnConfigMap } from "@/modules/kanban-config/utils/config"
 import { usePublicTickets } from "@/modules/assistance/hooks/usePublicTickets"
 import { TicketDetailSheet } from "@/pages/admin/tickets/TicketDetailSheet"
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
@@ -11,6 +13,8 @@ import { Button } from "@/shared/components/ui/button"
 import { cn } from "@/shared/lib/utils"
 
 export function TicketsKanbanPage() {
+  const { config: kanbanConfig } = useKanbanConfig()
+  const columnConfigs = buildColumnConfigMap(kanbanConfig)
   const { openCreateTicket, lastSuccess } = useCreateTicketModal()
   const {
     tickets,
@@ -81,6 +85,7 @@ export function TicketsKanbanPage() {
       )}
 
       <TicketKanbanBoard
+        columnConfigs={columnConfigs}
         tickets={tickets}
         isLoading={isLoadingList}
         isUpdatingStatus={isUpdatingStatus}

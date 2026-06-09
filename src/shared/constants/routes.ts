@@ -9,5 +9,6 @@ export const ROUTES = {
     tickets: "/admin/tickets",
     import: "/admin/import",
     resetData: "/admin/reset",
+    kanbanSettings: "/admin/kanban-settings",
   },
 } as const

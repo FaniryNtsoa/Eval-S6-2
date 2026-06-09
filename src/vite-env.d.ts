@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_GLPI_LEGACY_API_URL: string
   readonly VITE_GLPI_APP_TOKEN: string
   readonly VITE_GLPI_USER_TOKEN: string
+  readonly VITE_KANBAN_CONFIG_API_URL: string
 }
 
 interface ImportMeta {

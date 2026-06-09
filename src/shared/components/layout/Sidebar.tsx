@@ -3,6 +3,7 @@ import {
   Database,
   LayoutDashboard,
   LogOut,
+  Palette,
   RotateCcw,
   Ticket,
   Upload,
@@ -29,6 +30,11 @@ const navItems = [
   { to: ROUTES.admin.dashboard, label: "Tableau de bord", icon: LayoutDashboard },
   { to: ROUTES.admin.tickets, label: "Tickets", icon: Ticket },
   { to: ROUTES.admin.import, label: "Import", icon: Upload },
+  {
+    to: ROUTES.admin.kanbanSettings,
+    label: "Kanban",
+    icon: Palette,
+  },
   { to: ROUTES.admin.resetData, label: "Réinitialiser", icon: RotateCcw },
 ]
 

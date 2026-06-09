@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom"
-import { ExternalLink, Plus, X } from "lucide-react"
+import { ExternalLink, X } from "lucide-react"
 
 import {
   CreateTicketModalProvider,
@@ -59,7 +59,7 @@ function PublicSuccessBanner() {
 
 function PublicLayoutContent() {
   const location = useLocation()
-  const { openCreateTicket } = useCreateTicketModal()
+  // const { openCreateTicket } = useCreateTicketModal()
   const pageTitle = pageTitles[location.pathname] ?? "Espace public"
   const isKanbanPage = location.pathname === ROUTES.tickets
 
@@ -74,12 +74,12 @@ function PublicLayoutContent() {
             {pageTitle}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="default" size="sm" onClick={openCreateTicket}>
+            {/* <Button variant="default" size="sm" onClick={openCreateTicket}>
               <Plus className="size-4" />
               <span className="hidden sm:inline">
                 {isKanbanPage ? "Ajouter 1 ticket" : "Créer un ticket"}
               </span>
-            </Button>
+            </Button> */}
             <Button variant="ghost" size="sm" asChild>
               <Link
                 to={ROUTES.admin.dashboard}

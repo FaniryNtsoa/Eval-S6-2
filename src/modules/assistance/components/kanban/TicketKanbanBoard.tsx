@@ -19,6 +19,7 @@ import {
   type StatusChangeDialogKind,
 } from "@/modules/assistance/constants/kanban"
 import type { GlpiTicketListItem } from "@/modules/assistance/types/ticket.types"
+import type { KanbanColumnConfig } from "@/modules/kanban-config/types/kanban-config.types"
 import {
   resolveTicketPriority,
   resolveTicketType,
@@ -37,6 +38,7 @@ interface PendingStatusChange {
 }
 
 interface TicketKanbanBoardProps {
+  columnConfigs: Record<KanbanStatusId, KanbanColumnConfig>
   tickets: GlpiTicketListItem[]
   isLoading: boolean
   isUpdatingStatus: boolean
@@ -64,6 +66,7 @@ function parseColumnId(columnId: string | number): KanbanStatusId | null {
 }
 
 export function TicketKanbanBoard({
+  columnConfigs,
   tickets,
   isLoading,
   isUpdatingStatus,
@@ -188,6 +191,7 @@ export function TicketKanbanBoard({
             <TicketKanbanColumn
               key={statusId}
               statusId={statusId}
+              columnConfig={columnConfigs[statusId]}
               tickets={ticketsByColumn[statusId]}
               isLoading={isLoading}
               onOpenTicket={onOpenTicket}
