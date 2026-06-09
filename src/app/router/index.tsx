@@ -11,6 +11,7 @@ import { ResetDataPage } from "@/pages/admin/reset/ResetDataPage"
 import { TicketsPage } from "@/pages/admin/tickets/TicketsPage"
 import { ElementsPage } from "@/pages/public/elements/ElementsPage"
 import { HomePage } from "@/pages/public/home/HomePage"
+import { TicketsKanbanPage } from "@/pages/public/tickets/TicketsKanbanPage"
 import { ROUTES } from "@/shared/constants/routes"
 
 export const router = createBrowserRouter([
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.elements,
         element: <ElementsPage />,
+      },
+      {
+        path: ROUTES.tickets,
+        element: <TicketsKanbanPage />,
       },
     ],
   },

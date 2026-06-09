@@ -1,14 +1,27 @@
-import { Outlet } from "react-router-dom"
-import { X } from "lucide-react"
+import { Link, Outlet, useLocation } from "react-router-dom"
+import { ExternalLink, Plus, X } from "lucide-react"
 
 import {
   CreateTicketModalProvider,
   useCreateTicketModal,
 } from "@/modules/assistance/context/CreateTicketModalContext"
 import { Footer } from "@/shared/components/layout/Footer"
-import { Header } from "@/shared/components/layout/Header"
+import { PublicSidebar } from "@/shared/components/layout/PublicSidebar"
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
 import { Button } from "@/shared/components/ui/button"
+import { Separator } from "@/shared/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/shared/components/ui/sidebar"
+import { ROUTES } from "@/shared/constants/routes"
+
+const pageTitles: Record<string, string> = {
+  [ROUTES.home]: "Accueil",
+  [ROUTES.tickets]: "Tickets",
+  [ROUTES.elements]: "Éléments",
+}
 
 function PublicSuccessBanner() {
   const { lastSuccess, clearSuccess } = useCreateTicketModal()
@@ -45,15 +58,55 @@ function PublicSuccessBanner() {
 }
 
 function PublicLayoutContent() {
+  const location = useLocation()
+  const { openCreateTicket } = useCreateTicketModal()
+  const pageTitle = pageTitles[location.pathname] ?? "Espace public"
+  const isKanbanPage = location.pathname === ROUTES.tickets
+
   return (
-    <div className="flex min-h-svh flex-col">
-      <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-        <PublicSuccessBanner />
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
+    <SidebarProvider>
+      <PublicSidebar />
+      <SidebarInset className="bg-linear-to-b from-muted/40 to-background">
+        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md md:px-6">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <span className="text-sm font-medium text-muted-foreground">
+            {pageTitle}
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="default" size="sm" onClick={openCreateTicket}>
+              <Plus className="size-4" />
+              <span className="hidden sm:inline">
+                {isKanbanPage ? "Ajouter 1 ticket" : "Créer un ticket"}
+              </span>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link
+                to={ROUTES.admin.dashboard}
+                className="gap-1.5 text-muted-foreground"
+              >
+                Admin
+                <ExternalLink className="size-3.5" />
+              </Link>
+            </Button>
+          </div>
+        </header>
+
+        <div className="flex flex-1 flex-col p-4 md:p-6 lg:p-8">
+          <div
+            className={
+              isKanbanPage
+                ? "mx-auto w-full max-w-[1400px] flex-1"
+                : "mx-auto w-full max-w-6xl flex-1"
+            }
+          >
+            <PublicSuccessBanner />
+            <Outlet />
+          </div>
+          <Footer />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 

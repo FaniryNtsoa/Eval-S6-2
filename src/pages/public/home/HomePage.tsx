@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { ArrowRight, Database, Plus, Shield, Upload } from "lucide-react"
+import { ArrowRight, Columns3, Database, Plus, Shield, Upload } from "lucide-react"
 
 import { useCreateTicketModal } from "@/modules/assistance/context/CreateTicketModalContext"
 import { Button } from "@/shared/components/ui/button"
@@ -56,6 +56,12 @@ export function HomePage() {
             <Button size="lg" className="gap-2" onClick={openCreateTicket}>
               <Plus className="size-4" />
               Créer un ticket
+            </Button>
+            <Button asChild size="lg" variant="outline" className="gap-2">
+              <Link to={ROUTES.tickets}>
+                <Columns3 className="size-4" />
+                Voir les tickets
+              </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="gap-2">
               <Link to={ROUTES.elements}>
