@@ -10,5 +10,6 @@ export const ROUTES = {
     import: "/admin/import",
     resetData: "/admin/reset",
     kanbanSettings: "/admin/kanban-settings",
+    statusLabels: "/admin/status-labels",
   },
 } as const

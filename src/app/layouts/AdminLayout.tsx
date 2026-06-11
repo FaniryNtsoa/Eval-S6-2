@@ -17,6 +17,7 @@ const pageTitles: Record<string, string> = {
   [ROUTES.admin.import]: "Import GLPI",
   [ROUTES.admin.resetData]: "Réinitialisation",
   [ROUTES.admin.kanbanSettings]: "Personnalisation Kanban",
+  [ROUTES.admin.statusLabels]: "Libellés de statut",
 }
 
 export function AdminLayout() {

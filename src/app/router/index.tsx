@@ -14,6 +14,7 @@ import { ElementsPage } from "@/pages/public/elements/ElementsPage"
 import { HomePage } from "@/pages/public/home/HomePage"
 import { TicketsKanbanPage } from "@/pages/public/tickets/TicketsKanbanPage"
 import { ROUTES } from "@/shared/constants/routes"
+import { StatusLabelsPage } from "@/pages/admin/status-labels/StatuswLabelsPage";
 
 export const router = createBrowserRouter([
   {
@@ -70,6 +71,10 @@ export const router = createBrowserRouter([
               {
                 path: "kanban-settings",
                 element: <KanbanSettingsPage />,
+              },
+              {
+                path: "status-labels",
+                element: <StatusLabelsPage />,
               },
             ],
           },

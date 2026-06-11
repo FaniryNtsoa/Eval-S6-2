@@ -1,6 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import {
   Database,
+  Languages,
   LayoutDashboard,
   LogOut,
   Palette,
@@ -35,6 +36,7 @@ const navItems = [
     label: "Kanban",
     icon: Palette,
   },
+  { to: ROUTES.admin.statusLabels, label: "Libellés MG", icon: Languages },
   { to: ROUTES.admin.resetData, label: "Réinitialiser", icon: RotateCcw },
 ]
 

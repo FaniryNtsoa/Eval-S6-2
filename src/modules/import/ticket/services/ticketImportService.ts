@@ -119,12 +119,13 @@ async function importRow(
       }
     }
 
+
+    await linkTicketItems(row, ticketId, registry)
+
     const statusWarning = await applyTicketStatus(ticketId, row.status)
     if (statusWarning) {
       warnings.push(statusWarning)
     }
-
-    await linkTicketItems(row, ticketId, registry)
 
     refMap.set(row.refTicket, ticketId)
 
