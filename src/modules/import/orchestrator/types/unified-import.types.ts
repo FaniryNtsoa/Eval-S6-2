@@ -3,7 +3,7 @@ import type { ResetReport } from "@/modules/import/common/types/import-result.ty
 
 export interface UnifiedImportFiles {
   assets: File
-  images: File
+  images?: File
   tickets: File
   costs: File
 }

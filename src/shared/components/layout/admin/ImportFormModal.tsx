@@ -6,6 +6,8 @@ import type { UnifiedImportFiles } from "@/modules/import/orchestrator/types/uni
 import { CsvFileField } from "@/shared/components/layout/admin/CsvFileField"
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
 import { Button } from "@/shared/components/ui/button"
+import { Checkbox } from "@/shared/components/ui/checkbox"
+import { Label } from "@/shared/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -42,7 +44,7 @@ const fileFields = [
     id: "modal-images-zip",
     step: 2,
     label: "Images actifs",
-    hint: "Archive ZIP obligatoire. Peut être vide — les images sont nommées comme la colonne Name (ex. PC-ADM-001.png).",
+    hint: "Archive ZIP optionnelle. Les images sont nommées comme la colonne Name (ex. PC-ADM-001.png).",
     key: "images" as const,
     accept: ".zip,application/zip",
     chooseLabel: "Cliquer pour choisir une archive ZIP",
@@ -88,6 +90,7 @@ export function ImportFormModal({
     costs: costsInputRef,
   }
 
+  const [includeImages, setIncludeImages] = useState(false)
   const [assetsFile, setAssetsFile] = useState<File | null>(null)
   const [imagesFile, setImagesFile] = useState<File | null>(null)
   const [ticketsFile, setTicketsFile] = useState<File | null>(null)
@@ -107,8 +110,23 @@ export function ImportFormModal({
     costs: setCostsFile,
   }
 
-  const allFilesSelected = assetsFile && imagesFile && ticketsFile && costsFile
-  const selectedCount = Object.values(files).filter(Boolean).length
+  const canImport =
+    assetsFile &&
+    ticketsFile &&
+    costsFile &&
+    (!includeImages || imagesFile)
+
+  const requiredCount = includeImages ? 4 : 3
+  const selectedCount = [
+    assetsFile,
+    includeImages ? imagesFile : true,
+    ticketsFile,
+    costsFile,
+  ].filter(Boolean).length
+
+  const visibleFields = fileFields
+    .filter((field) => field.key !== "images" || includeImages)
+    .map((field, index) => ({ ...field, step: index + 1 }))
 
   const handleFileChange =
     (key: keyof typeof files) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -126,6 +144,7 @@ export function ImportFormModal({
   }
 
   const clearAllFiles = () => {
+    setIncludeImages(false)
     setAssetsFile(null)
     setImagesFile(null)
     setTicketsFile(null)
@@ -152,13 +171,13 @@ export function ImportFormModal({
   }
 
   const handleImport = async () => {
-    if (!assetsFile || !imagesFile || !ticketsFile || !costsFile) {
+    if (!canImport || !assetsFile || !ticketsFile || !costsFile) {
       return
     }
 
     await onImport({
       assets: assetsFile,
-      images: imagesFile,
+      ...(includeImages && imagesFile ? { images: imagesFile } : {}),
       tickets: ticketsFile,
       costs: costsFile,
     })
@@ -187,9 +206,8 @@ export function ImportFormModal({
             Import GLPI
           </DialogTitle>
           <DialogDescription className="text-left">
-            Sélectionnez les quatre fichiers dans l&apos;ordre. Les CSV peuvent
-            ne contenir que l&apos;en-tête ; le ZIP images est obligatoire mais
-            peut être vide.
+            Sélectionnez les trois fichiers CSV obligatoires. L&apos;import
+            d&apos;images (ZIP) est optionnel et peut être activé ci-dessous.
           </DialogDescription>
         </DialogHeader>
 
@@ -198,13 +216,42 @@ export function ImportFormModal({
             <Info className="size-4" />
             <AlertTitle className="text-sm">Ordre d&apos;exécution</AlertTitle>
             <AlertDescription>
-              Actifs → Images → Tickets → Coûts. Des données en aval sans amont
-              correspondant provoquent une erreur et un rollback automatique.
+              Actifs
+              {includeImages ? " → Images" : ""} → Tickets → Coûts. Des données
+              en aval sans amont correspondant provoquent une erreur et un
+              rollback automatique.
             </AlertDescription>
           </Alert>
 
+          <div className="flex items-start gap-3 rounded-lg border border-border/80 bg-muted/20 px-4 py-3">
+            <Checkbox
+              id="include-images"
+              checked={includeImages}
+              disabled={isRunning}
+              onCheckedChange={(checked) => {
+                const next = checked === true
+                if (!next) {
+                  clearFile("images")
+                }
+                setIncludeImages(next)
+                onClear()
+              }}
+              className="mt-0.5"
+            />
+            <div className="min-w-0 space-y-1">
+              <Label htmlFor="include-images" className="cursor-pointer font-medium">
+                Importer les images des actifs
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {includeImages
+                  ? "Sélectionnez une archive ZIP nommée comme la colonne Name (ex. PC-ADM-001.png)."
+                  : "L'étape images sera ignorée lors de l'import."}
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-3">
-            {fileFields.map((field) => (
+            {visibleFields.map((field) => (
               <CsvFileField
                 key={field.key}
                 id={field.id}
@@ -257,7 +304,7 @@ export function ImportFormModal({
 
         <DialogFooter className="flex-row items-center justify-between gap-2 border-t bg-muted/20 px-6 py-4 sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            {selectedCount}/4 fichiers sélectionnés
+            {selectedCount}/{requiredCount} fichiers sélectionnés
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <Button
@@ -272,10 +319,7 @@ export function ImportFormModal({
                 Tout effacer
               </Button>
             )}
-            <Button
-              onClick={handleImport}
-              disabled={!allFilesSelected || isRunning}
-            >
+            <Button onClick={handleImport} disabled={!canImport || isRunning}>
               {isRunning ? "Import en cours…" : "Lancer l'import"}
             </Button>
           </div>

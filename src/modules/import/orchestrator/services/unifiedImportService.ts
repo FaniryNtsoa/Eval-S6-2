@@ -107,7 +107,7 @@ export async function runUnifiedImport(
 
     const [assetRows, imageRows, ticketRows, costRows] = await Promise.all([
       parseAssetCsvFile(files.assets),
-      parseImageZipFile(files.images),
+      files.images ? parseImageZipFile(files.images) : Promise.resolve([]),
       parseTicketCsvFile(files.tickets),
       parseTicketCostCsvFile(files.costs),
     ])
