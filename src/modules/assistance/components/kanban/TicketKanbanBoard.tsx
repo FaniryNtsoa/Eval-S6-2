@@ -58,7 +58,7 @@ function parseColumnId(columnId: string | number): KanbanStatusId | null {
 
   const statusId = Number(columnId.replace("column-", ""))
 
-  if (statusId === 1 || statusId === 2 || statusId === 5) {
+  if (statusId === 1 || statusId === 2 || statusId === 6) {
     return statusId
   }
 
@@ -90,7 +90,7 @@ export function TicketKanbanBoard({
     const grouped: Record<KanbanStatusId, GlpiTicketListItem[]> = {
       1: [],
       2: [],
-      5: [],
+      6: [],
     }
 
     for (const ticket of tickets) {

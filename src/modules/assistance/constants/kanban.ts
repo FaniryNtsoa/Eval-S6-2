@@ -1,4 +1,4 @@
-export const KANBAN_STATUSES = [1, 2, 5] as const
+export const KANBAN_STATUSES = [1, 2, 6] as const
 
 export type KanbanStatusId = (typeof KANBAN_STATUSES)[number]
 
@@ -8,7 +8,7 @@ export function toKanbanColumn(statusId: number | undefined): KanbanStatusId {
   }
 
   if (statusId === 5 || statusId === 6) {
-    return 5
+    return 6
   }
 
   return 2
@@ -24,11 +24,11 @@ export function getStatusChangeDialogKind(
     return null
   }
 
-  if (toColumn === 5) {
+  if (toColumn === 6) {
     return "solution"
   }
 
-  if (fromColumn === 5) {
+  if (fromColumn === 6) {
     return "reopen"
   }
 

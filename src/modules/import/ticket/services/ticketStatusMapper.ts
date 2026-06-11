@@ -1,6 +1,8 @@
 const STATUS_ALIASES: Record<string, number> = {
   new: 1,
   nouveau: 1,
+  "in progress (assigned)": 2,
+  "in progress": 2,
   "en cours (attribué)": 2,
   "en cours (assigné)": 2,
   assigned: 2,

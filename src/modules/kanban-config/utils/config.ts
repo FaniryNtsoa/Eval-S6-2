@@ -17,7 +17,7 @@ export function buildColumnConfigMap(
   }
 
   for (const column of config.columns) {
-    if (column.statusId === 1 || column.statusId === 2 || column.statusId === 5) {
+    if (column.statusId === 1 || column.statusId === 2 || column.statusId === 6) {
       map[column.statusId] = column
     }
   }

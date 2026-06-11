@@ -4,7 +4,7 @@ import type { KanbanConfig } from "@/modules/kanban-config/types/kanban-config.t
 export const KANBAN_STATUS_LABELS_FR: Record<KanbanStatusId, string> = {
   1: "Nouveau",
   2: "In progress",
-  5: "Terminé",
+  6: "Terminé",
 }
 
 export const DEFAULT_KANBAN_CONFIG: KanbanConfig = {
@@ -22,8 +22,8 @@ export const DEFAULT_KANBAN_CONFIG: KanbanConfig = {
       backgroundColor: "#EDE9FE",
     },
     {
-      statusId: 5,
-      labelFr: KANBAN_STATUS_LABELS_FR[5],
+      statusId: 6,
+      labelFr: KANBAN_STATUS_LABELS_FR[6],
       labelMg: "Vita",
       backgroundColor: "#D1FAE5",
     },

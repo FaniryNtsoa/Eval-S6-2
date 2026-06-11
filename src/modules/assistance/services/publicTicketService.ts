@@ -91,7 +91,7 @@ export async function updatePublicTicketStatus({
   const trimmedComment = comment?.trim()
 
   if (trimmedComment) {
-    if (statusId === 5) {
+    if (statusId === 6) {
       await addTicketSolution(ticketId, trimmedComment)
     } else {
       await addTicketFollowup(ticketId, trimmedComment)
