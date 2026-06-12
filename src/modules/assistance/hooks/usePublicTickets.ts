@@ -12,7 +12,12 @@ import type {
   GlpiTicketDetail,
   GlpiTicketListItem,
 } from "@/modules/assistance/types/ticket.types"
+import { saveSupercost } from "@/modules/kanban-config/services/kanbanConfigService"
 import { getErrorMessage } from "@/modules/import/common/services/glpiResourceService"
+
+export interface ChangeTicketStatusInput extends UpdatePublicTicketStatusInput {
+  supercost?: number
+}
 
 export function usePublicTickets() {
   const [tickets, setTickets] = useState<GlpiTicketListItem[]>([])
@@ -68,7 +73,7 @@ export function usePublicTickets() {
   }, [])
 
   const changeTicketStatus = useCallback(
-    async (input: UpdatePublicTicketStatusInput) => {
+    async (input: ChangeTicketStatusInput) => {
       setIsUpdatingStatus(true)
       setError(null)
 
@@ -84,6 +89,17 @@ export function usePublicTickets() {
 
       try {
         await updatePublicTicketStatus(input)
+
+        if (
+          input.statusId === 6 &&
+          input.supercost != null &&
+          input.supercost > 0
+        ) {
+          await saveSupercost({
+            ticketId: input.ticketId,
+            amount: input.supercost,
+          })
+        }
 
         if (selectedId === input.ticketId) {
           const [detail, costs] = await Promise.all([

@@ -21,6 +21,7 @@ const pageTitles: Record<string, string> = {
   [ROUTES.home]: "Accueil",
   [ROUTES.tickets]: "Tickets",
   [ROUTES.elements]: "Éléments",
+  [ROUTES.costs]: "Coûts",
 }
 
 function PublicSuccessBanner() {

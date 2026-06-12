@@ -2,6 +2,7 @@ export const ROUTES = {
   home: "/",
   elements: "/elements",
   tickets: "/tickets",
+  costs: "/costs",
   admin: {
     root: "/admin",
     login: "/admin/login",

@@ -5,6 +5,8 @@ import { DEFAULT_KANBAN_CONFIG } from "@/modules/kanban-config/constants/default
 import type {
   AddKanbanLanguageInput,
   KanbanConfig,
+  SaveTicketSupercostInput,
+  TicketSupercost,
   UpdateKanbanConfigInput,
 } from "@/modules/kanban-config/types/kanban-config.types"
 
@@ -47,4 +49,23 @@ export async function removeKanbanLanguage(code: string): Promise<KanbanConfig> 
     `/languages/${encodeURIComponent(code)}`,
   )
   return data
+}
+
+export async function fetchAllSupercosts(): Promise<TicketSupercost[]> {
+  const { data } = await kanbanConfigClient.get<TicketSupercost[]>("/supercosts")
+  return data
+}
+
+export async function saveSupercost(
+  input: SaveTicketSupercostInput,
+): Promise<TicketSupercost> {
+  const { data } = await kanbanConfigClient.post<TicketSupercost>(
+    "/supercosts",
+    input,
+  )
+  return data
+}
+
+export async function clearAllSupercosts(): Promise<void> {
+  await kanbanConfigClient.delete("/supercosts")
 }

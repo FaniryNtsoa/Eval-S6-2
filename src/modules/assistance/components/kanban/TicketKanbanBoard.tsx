@@ -51,6 +51,7 @@ interface TicketKanbanBoardProps {
     ticketId: number,
     statusId: KanbanStatusId,
     comment?: string,
+    supercost?: number,
   ) => Promise<void>
   onAddTicket: () => void
 }
@@ -114,8 +115,9 @@ export function TicketKanbanBoard({
     ticketId: number,
     toColumn: KanbanStatusId,
     comment?: string,
+    supercost?: number,
   ) => {
-    await onStatusChange(ticketId, toColumn, comment)
+    await onStatusChange(ticketId, toColumn, comment, supercost)
     setPendingChange(null)
   }
 
@@ -244,7 +246,7 @@ export function TicketKanbanBoard({
             setPendingChange(null)
           }
         }}
-        onConfirm={async (comment) => {
+        onConfirm={async (comment, supercost) => {
           if (!pendingChange) {
             return
           }
@@ -253,6 +255,7 @@ export function TicketKanbanBoard({
             pendingChange.ticketId,
             pendingChange.toColumn,
             comment,
+            supercost,
           )
         }}
       />

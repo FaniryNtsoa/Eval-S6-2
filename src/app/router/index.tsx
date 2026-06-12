@@ -12,6 +12,7 @@ import { KanbanSettingsPage } from "@/pages/admin/kanban-settings/KanbanSettings
 import { TicketsPage } from "@/pages/admin/tickets/TicketsPage"
 import { ElementsPage } from "@/pages/public/elements/ElementsPage"
 import { HomePage } from "@/pages/public/home/HomePage"
+import { CostsPage } from "@/pages/public/costs/CostsPage"
 import { TicketsKanbanPage } from "@/pages/public/tickets/TicketsKanbanPage"
 import { ROUTES } from "@/shared/constants/routes"
 import { StatusLabelsPage } from "@/pages/admin/status-labels/StatuswLabelsPage";
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.tickets,
         element: <TicketsKanbanPage />,
+      },
+      {
+        path: ROUTES.costs,
+        element: <CostsPage />,
       },
     ],
   },

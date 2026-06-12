@@ -46,8 +46,9 @@ export function TicketsKanbanPage() {
     ticketId: number,
     statusId: KanbanStatusId,
     comment?: string,
+    supercost?: number,
   ) => {
-    await changeTicketStatus({ ticketId, statusId, comment })
+    await changeTicketStatus({ ticketId, statusId, comment, supercost })
   }
 
   return (

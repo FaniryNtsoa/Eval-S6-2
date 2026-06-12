@@ -5,6 +5,7 @@ import {
   Home,
   LayoutGrid,
   Shield,
+  Wallet,
 } from "lucide-react"
 
 import { APP_CONFIG } from "@/shared/constants/config"
@@ -27,6 +28,7 @@ const navItems = [
   { to: ROUTES.home, label: "Accueil", icon: Home },
   { to: ROUTES.tickets, label: "Tickets", icon: Columns3 },
   { to: ROUTES.elements, label: "Éléments", icon: LayoutGrid },
+  { to: ROUTES.costs, label: "Coûts", icon: Wallet },
 ]
 
 export function PublicSidebar() {

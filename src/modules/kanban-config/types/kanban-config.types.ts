@@ -32,3 +32,15 @@ export interface AddKanbanLanguageInput {
   code: string
   name: string
 }
+
+export interface TicketSupercost {
+  id: number
+  ticketId: number
+  amount: number
+  createdAt: string
+}
+
+export interface SaveTicketSupercostInput {
+  ticketId: number
+  amount: number
+}

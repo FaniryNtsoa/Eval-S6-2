@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog"
+import { Input } from "@/shared/components/ui/input"
 import { Label } from "@/shared/components/ui/label"
 import { cn } from "@/shared/lib/utils"
 
@@ -21,7 +22,7 @@ const dialogCopy: Record<
   solution: {
     title: "Marquer comme terminé",
     description:
-      "Le passage en « Terminé » nécessite une description de la solution apportée.",
+      "Le passage en « Terminé » nécessite une solution et un supercost (coût fixe).",
     label: "Solution",
     placeholder: "Décrivez la solution apportée…",
   },
@@ -40,7 +41,7 @@ interface TicketStatusChangeDialogProps {
   ticketTitle?: string
   isSubmitting: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: (comment: string) => Promise<void>
+  onConfirm: (comment: string, supercost?: number) => Promise<void>
 }
 
 export function TicketStatusChangeDialog({
@@ -52,21 +53,30 @@ export function TicketStatusChangeDialog({
   onConfirm,
 }: TicketStatusChangeDialogProps) {
   const [comment, setComment] = useState("")
+  const [supercost, setSupercost] = useState("")
   const copy = kind ? dialogCopy[kind] : null
 
   useEffect(() => {
     if (!open) {
       setComment("")
+      setSupercost("")
     }
   }, [open])
 
+  const parsedSupercost = Number.parseFloat(supercost.replace(",", "."))
+  const isSupercostValid =
+    kind !== "solution" || (!Number.isNaN(parsedSupercost) && parsedSupercost > 0)
+
   const handleSubmit = async () => {
-    if (!comment.trim()) {
+    if (!comment.trim() || !isSupercostValid) {
       return
     }
 
     try {
-      await onConfirm(comment.trim())
+      await onConfirm(
+        comment.trim(),
+        kind === "solution" ? parsedSupercost : undefined,
+      )
     } catch {
       // L'erreur est affichée par la page parente via usePublicTickets.
     }
@@ -87,22 +97,40 @@ export function TicketStatusChangeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="status-change-comment">{copy?.label}</Label>
-          <textarea
-            id="status-change-comment"
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-            placeholder={copy?.placeholder}
-            rows={4}
-            disabled={isSubmitting}
-            className={cn(
-              "border-input bg-background ring-offset-background placeholder:text-muted-foreground",
-              "focus-visible:ring-ring flex min-h-[100px] w-full rounded-md border px-3 py-2 text-sm",
-              "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            )}
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="status-change-comment">{copy?.label}</Label>
+            <textarea
+              id="status-change-comment"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder={copy?.placeholder}
+              rows={4}
+              disabled={isSubmitting}
+              className={cn(
+                "border-input bg-background ring-offset-background placeholder:text-muted-foreground",
+                "focus-visible:ring-ring flex min-h-[100px] w-full rounded-md border px-3 py-2 text-sm",
+                "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+              )}
+            />
+          </div>
+
+          {kind === "solution" && (
+            <div className="space-y-2">
+              <Label htmlFor="status-change-supercost">Supercost (coût fixe)</Label>
+              <Input
+                id="status-change-supercost"
+                type="number"
+                min="0"
+                step="0.01"
+                value={supercost}
+                onChange={(event) => setSupercost(event.target.value)}
+                placeholder="Ex. 15000"
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -115,7 +143,7 @@ export function TicketStatusChangeDialog({
           </Button>
           <Button
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !comment.trim()}
+            disabled={isSubmitting || !comment.trim() || !isSupercostValid}
           >
             {isSubmitting && <Loader2 className="size-4 animate-spin" />}
             Confirmer
