@@ -4,6 +4,7 @@ import {
   listPaginated,
 } from "@/modules/import/common/services/glpiResourceService"
 import { TICKET_ENDPOINT } from "@/modules/import/ticket/constants/ticket-csv-columns"
+import type { GlpiTicketCost } from "@/modules/assistance/types/ticket-cost.types"
 import type {
   GlpiTicketDetail,
   GlpiTicketListItem,
@@ -23,4 +24,10 @@ export async function fetchTicketById(id: number): Promise<GlpiTicketDetail> {
   )
 
   return data
+}
+
+export async function fetchTicketCosts(
+  ticketId: number,
+): Promise<GlpiTicketCost[]> {
+  return listPaginated<GlpiTicketCost>(`${TICKET_ENDPOINT}/${ticketId}/Cost`)
 }

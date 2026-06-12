@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react"
 
 import {
   fetchTicketById,
+  fetchTicketCosts,
   fetchTickets,
 } from "@/modules/assistance/services/ticketService"
+import type { GlpiTicketCost } from "@/modules/assistance/types/ticket-cost.types"
 import type {
   GlpiTicketDetail,
   GlpiTicketListItem,
@@ -15,6 +17,7 @@ export function useTickets() {
   const [selectedTicket, setSelectedTicket] = useState<GlpiTicketDetail | null>(
     null,
   )
+  const [selectedCosts, setSelectedCosts] = useState<GlpiTicketCost[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [isLoadingList, setIsLoadingList] = useState(true)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
@@ -40,11 +43,16 @@ export function useTickets() {
     setError(null)
 
     try {
-      const detail = await fetchTicketById(id)
+      const [detail, costs] = await Promise.all([
+        fetchTicketById(id),
+        fetchTicketCosts(id),
+      ])
       setSelectedTicket(detail)
+      setSelectedCosts(costs)
     } catch (loadError) {
       setError(getErrorMessage(loadError))
       setSelectedTicket(null)
+      setSelectedCosts([])
     } finally {
       setIsLoadingDetail(false)
     }
@@ -53,6 +61,7 @@ export function useTickets() {
   const clearSelection = useCallback(() => {
     setSelectedId(null)
     setSelectedTicket(null)
+    setSelectedCosts([])
   }, [])
 
   useEffect(() => {
@@ -62,6 +71,7 @@ export function useTickets() {
   return {
     tickets,
     selectedTicket,
+    selectedCosts,
     selectedId,
     isLoadingList,
     isLoadingDetail,

@@ -24,6 +24,7 @@ export function TicketsKanbanPage() {
   const {
     tickets,
     selectedTicket,
+    selectedCosts,
     selectedId,
     isLoadingList,
     isLoadingDetail,
@@ -113,6 +114,7 @@ export function TicketsKanbanPage() {
           }
         }}
         ticket={selectedTicket}
+        costs={selectedCosts}
         isLoading={isLoadingDetail}
       />
     </div>

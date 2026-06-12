@@ -42,6 +42,7 @@ export function TicketsPage() {
   const {
     tickets,
     selectedTicket,
+    selectedCosts,
     selectedId,
     isLoadingList,
     isLoadingDetail,
@@ -253,6 +254,7 @@ export function TicketsPage() {
           }
         }}
         ticket={selectedTicket}
+        costs={selectedCosts}
         isLoading={isLoadingDetail}
       />
     </div>

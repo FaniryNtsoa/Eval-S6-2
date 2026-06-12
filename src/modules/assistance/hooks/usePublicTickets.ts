@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from "react"
 
 import {
   fetchPublicTicketById,
+  fetchPublicTicketCosts,
   fetchPublicTickets,
   updatePublicTicketStatus,
   type UpdatePublicTicketStatusInput,
 } from "@/modules/assistance/services/publicTicketService"
+import type { GlpiTicketCost } from "@/modules/assistance/types/ticket-cost.types"
 import type {
   GlpiTicketDetail,
   GlpiTicketListItem,
@@ -17,6 +19,7 @@ export function usePublicTickets() {
   const [selectedTicket, setSelectedTicket] = useState<GlpiTicketDetail | null>(
     null,
   )
+  const [selectedCosts, setSelectedCosts] = useState<GlpiTicketCost[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [isLoadingList, setIsLoadingList] = useState(true)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
@@ -43,11 +46,16 @@ export function usePublicTickets() {
     setError(null)
 
     try {
-      const detail = await fetchPublicTicketById(id)
+      const [detail, costs] = await Promise.all([
+        fetchPublicTicketById(id),
+        fetchPublicTicketCosts(id),
+      ])
       setSelectedTicket(detail)
+      setSelectedCosts(costs)
     } catch (loadError) {
       setError(getErrorMessage(loadError))
       setSelectedTicket(null)
+      setSelectedCosts([])
     } finally {
       setIsLoadingDetail(false)
     }
@@ -56,6 +64,7 @@ export function usePublicTickets() {
   const clearSelection = useCallback(() => {
     setSelectedId(null)
     setSelectedTicket(null)
+    setSelectedCosts([])
   }, [])
 
   const changeTicketStatus = useCallback(
@@ -77,8 +86,12 @@ export function usePublicTickets() {
         await updatePublicTicketStatus(input)
 
         if (selectedId === input.ticketId) {
-          const detail = await fetchPublicTicketById(input.ticketId)
+          const [detail, costs] = await Promise.all([
+            fetchPublicTicketById(input.ticketId),
+            fetchPublicTicketCosts(input.ticketId),
+          ])
           setSelectedTicket(detail)
+          setSelectedCosts(costs)
         }
       } catch (updateError) {
         setTickets(previousTickets)
@@ -99,6 +112,7 @@ export function usePublicTickets() {
   return {
     tickets,
     selectedTicket,
+    selectedCosts,
     selectedId,
     isLoadingList,
     isLoadingDetail,

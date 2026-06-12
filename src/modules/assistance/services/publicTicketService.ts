@@ -1,6 +1,7 @@
 import { GLPI_PAGE_SIZE } from "@/modules/import/common/constants"
 import { ACTIVE_ONLY_FILTER } from "@/modules/import/common/services/glpiResourceService"
 import { TICKET_ENDPOINT } from "@/modules/import/ticket/constants/ticket-csv-columns"
+import type { GlpiTicketCost } from "@/modules/assistance/types/ticket-cost.types"
 import type {
   GlpiTicketDetail,
   GlpiTicketListItem,
@@ -55,6 +56,14 @@ export async function fetchPublicTicketById(
   )
 
   return data
+}
+
+export async function fetchPublicTicketCosts(
+  ticketId: number,
+): Promise<GlpiTicketCost[]> {
+  return listPublicPaginated<GlpiTicketCost>(
+    `${TICKET_ENDPOINT}/${ticketId}/Cost`,
+  )
 }
 
 export interface UpdatePublicTicketStatusInput {
