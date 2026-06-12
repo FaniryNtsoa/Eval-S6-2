@@ -8,6 +8,11 @@ import {
   stripHtml,
 } from "@/modules/assistance/utils/glpiField"
 import type { GlpiTicketCost } from "@/modules/assistance/types/ticket-cost.types"
+import {
+  computeGlpiCostTotal,
+  computeGlpiTimeCostAmount,
+  sumGlpiCostBreakdown,
+} from "@/modules/assistance/utils/ticketCost"
 import type { GlpiTicketDetail } from "@/modules/assistance/types/ticket.types"
 import {
   TicketPriorityBadge,
@@ -64,17 +69,6 @@ function formatDurationSeconds(seconds?: number): string {
   return `${remainingSeconds}s`
 }
 
-function sumCosts(costs: GlpiTicketCost[]) {
-  return costs.reduce(
-    (acc, cost) => ({
-      duration: acc.duration + (cost.duration ?? 0),
-      time: acc.time + (cost.cost_time ?? 0),
-      fixed: acc.fixed + (cost.cost_fixed ?? 0),
-    }),
-    { duration: 0, time: 0, fixed: 0 },
-  )
-}
-
 function DetailRow({
   label,
   value,
@@ -105,8 +99,9 @@ export function TicketDetailSheet({
   const type = ticket ? resolveTicketType(ticket.type) : null
   const status = ticket ? resolveTicketStatus(ticket.status) : null
   const priority = ticket ? resolveTicketPriority(ticket.priority) : null
-  const costTotals = sumCosts(costs)
-  const grandTotal = costTotals.time + costTotals.fixed
+  const costTotals = sumGlpiCostBreakdown(costs)
+  const grandTotal =
+    costTotals.time + costTotals.fixed + costTotals.material
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -220,8 +215,8 @@ export function TicketDetailSheet({
                         </thead>
                         <tbody>
                           {costs.map((cost) => {
-                            const total =
-                              (cost.cost_time ?? 0) + (cost.cost_fixed ?? 0)
+                            const timeAmount = computeGlpiTimeCostAmount(cost)
+                            const total = computeGlpiCostTotal(cost)
 
                             return (
                               <tr
@@ -232,7 +227,7 @@ export function TicketDetailSheet({
                                   {formatDurationSeconds(cost.duration)}
                                 </td>
                                 <td className="px-3 py-2">
-                                  {formatAmount(cost.cost_time)}
+                                  {formatAmount(timeAmount)}
                                 </td>
                                 <td className="px-3 py-2">
                                   {formatAmount(cost.cost_fixed)}

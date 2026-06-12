@@ -3,17 +3,10 @@ import {
   fetchPublicTicketCosts,
   fetchPublicTickets,
 } from "@/modules/assistance/services/publicTicketService"
-import type { GlpiTicketCost } from "@/modules/assistance/types/ticket-cost.types"
 import type { ItemTypeCostRow } from "@/modules/costs/types/cost-aggregation.types"
+import { sumGlpiCosts } from "@/modules/assistance/utils/ticketCost"
 import { fetchAllSupercosts } from "@/modules/kanban-config/services/kanbanConfigService"
 import { listItemTicketsForTicket } from "@/modules/import/common/services/legacyItemTicketService"
-
-function sumGlpiCosts(costs: GlpiTicketCost[]): number {
-  return costs.reduce(
-    (total, cost) => total + (cost.cost_fixed ?? 0) + (cost.cost_time ?? 0),
-    0,
-  )
-}
 
 export async function aggregateCostsByItemType(): Promise<ItemTypeCostRow[]> {
   const [tickets, supercostEntries] = await Promise.all([
