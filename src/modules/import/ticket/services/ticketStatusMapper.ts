@@ -70,7 +70,13 @@ const PRIORITY_ALIASES: Record<string, number> = {
   élevée: 4,
   elevee: 4,
   "très élevé": 5,
+  "très élevée": 5,
   "tres eleve": 5,
+  "tres elevee": 5,
+  critical: 5,
+  critique: 5,
+  "très haute": 5,
+  "tres haute": 5,
 }
 
 export function mapTicketPriority(priority: string): number {
