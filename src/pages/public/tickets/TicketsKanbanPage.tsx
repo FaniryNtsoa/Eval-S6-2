@@ -4,7 +4,9 @@ import { RefreshCw, Ticket } from "lucide-react"
 import { TicketKanbanBoard } from "@/modules/assistance/components/kanban/TicketKanbanBoard"
 import type { KanbanStatusId } from "@/modules/assistance/constants/kanban"
 import { useCreateTicketModal } from "@/modules/assistance/context/CreateTicketModalContext"
+import { KanbanLanguageSelector } from "@/modules/kanban-config/components/KanbanLanguageSelector"
 import { useKanbanConfig } from "@/modules/kanban-config/hooks/useKanbanConfig"
+import { useKanbanDisplayLanguage } from "@/modules/kanban-config/hooks/useKanbanDisplayLanguage"
 import { buildColumnConfigMap } from "@/modules/kanban-config/utils/config"
 import { usePublicTickets } from "@/modules/assistance/hooks/usePublicTickets"
 import { TicketDetailSheet } from "@/pages/admin/tickets/TicketDetailSheet"
@@ -15,6 +17,9 @@ import { cn } from "@/shared/lib/utils"
 export function TicketsKanbanPage() {
   const { config: kanbanConfig } = useKanbanConfig()
   const columnConfigs = buildColumnConfigMap(kanbanConfig)
+  const { displayLanguage, setDisplayLanguage } = useKanbanDisplayLanguage(
+    kanbanConfig.languages,
+  )
   const { openCreateTicket, lastSuccess } = useCreateTicketModal()
   const {
     tickets,
@@ -63,6 +68,11 @@ export function TicketsKanbanPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <KanbanLanguageSelector
+            languages={kanbanConfig.languages}
+            value={displayLanguage}
+            onChange={setDisplayLanguage}
+          />
           <Button
             variant="outline"
             size="sm"
@@ -86,6 +96,7 @@ export function TicketsKanbanPage() {
 
       <TicketKanbanBoard
         columnConfigs={columnConfigs}
+        displayLanguage={displayLanguage}
         tickets={tickets}
         isLoading={isLoadingList}
         isUpdatingStatus={isUpdatingStatus}

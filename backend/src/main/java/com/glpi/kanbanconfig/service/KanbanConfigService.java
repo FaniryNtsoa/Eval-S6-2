@@ -1,17 +1,21 @@
 package com.glpi.kanbanconfig.service;
 
 import com.glpi.kanbanconfig.constants.KanbanDefaults;
+import com.glpi.kanbanconfig.dto.AddKanbanLanguageRequest;
 import com.glpi.kanbanconfig.dto.KanbanColumnDto;
 import com.glpi.kanbanconfig.dto.KanbanConfigResponse;
+import com.glpi.kanbanconfig.dto.KanbanLanguageDto;
 import com.glpi.kanbanconfig.dto.UpdateKanbanColumnDto;
 import com.glpi.kanbanconfig.dto.UpdateKanbanConfigRequest;
 import com.glpi.kanbanconfig.model.KanbanColumn;
+import com.glpi.kanbanconfig.model.KanbanLanguage;
 import com.glpi.kanbanconfig.repository.KanbanColumnRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -21,9 +25,14 @@ import java.util.stream.Collectors;
 public class KanbanConfigService {
 
     private final KanbanColumnRepository repository;
+    private final KanbanLabelColumnService labelColumnService;
 
-    public KanbanConfigService(KanbanColumnRepository repository) {
+    public KanbanConfigService(
+            KanbanColumnRepository repository,
+            KanbanLabelColumnService labelColumnService
+    ) {
         this.repository = repository;
+        this.labelColumnService = labelColumnService;
     }
 
     public KanbanConfigResponse getConfig() {
@@ -32,7 +41,7 @@ public class KanbanConfigService {
                 .map(this::toDto)
                 .toList();
 
-        return new KanbanConfigResponse(columns);
+        return new KanbanConfigResponse(buildLanguageDtos(), columns);
     }
 
     @Transactional
@@ -46,11 +55,28 @@ public class KanbanConfigService {
                             "Colonne introuvable pour le statut " + columnDto.statusId()
                     ));
 
-            column.setLabelMg(columnDto.labelMg().trim());
             column.setBackgroundColor(columnDto.backgroundColor().toUpperCase());
+
+            if (columnDto.labels().containsKey(KanbanLabelColumnService.MALAGASY_CODE)) {
+                column.setLabelMg(columnDto.labels().get(KanbanLabelColumnService.MALAGASY_CODE).trim());
+            }
+
             repository.save(column);
+            labelColumnService.writeLabelsForStatus(columnDto.statusId(), columnDto.labels());
         }
 
+        return getConfig();
+    }
+
+    @Transactional
+    public KanbanConfigResponse addLanguage(AddKanbanLanguageRequest request) {
+        labelColumnService.addLanguage(request.code(), request.name());
+        return getConfig();
+    }
+
+    @Transactional
+    public KanbanConfigResponse removeLanguage(String code) {
+        labelColumnService.removeLanguage(code);
         return getConfig();
     }
 
@@ -67,13 +93,25 @@ public class KanbanConfigService {
         }
     }
 
+    private List<KanbanLanguageDto> buildLanguageDtos() {
+        List<KanbanLanguageDto> languages = new ArrayList<>();
+        languages.add(new KanbanLanguageDto(
+                KanbanLabelColumnService.FRENCH_CODE,
+                "Français"
+        ));
+
+        for (KanbanLanguage language : labelColumnService.listStoredLanguages()) {
+            languages.add(new KanbanLanguageDto(language.getCode(), language.getName()));
+        }
+
+        return languages;
+    }
+
     private KanbanColumnDto toDto(KanbanColumn column) {
-        String labelFr = KanbanDefaults.FRENCH_LABELS.getOrDefault(column.getStatusId(), "Inconnu");
         return new KanbanColumnDto(
                 column.getStatusId(),
-                labelFr,
-                column.getLabelMg(),
-                column.getBackgroundColor()
+                column.getBackgroundColor(),
+                labelColumnService.readLabelsForStatus(column.getStatusId())
         );
     }
 }

@@ -3,6 +3,7 @@ import axios from "axios"
 import { env } from "@/config/env"
 import { DEFAULT_KANBAN_CONFIG } from "@/modules/kanban-config/constants/defaults"
 import type {
+  AddKanbanLanguageInput,
   KanbanConfig,
   UpdateKanbanConfigInput,
 } from "@/modules/kanban-config/types/kanban-config.types"
@@ -28,5 +29,22 @@ export async function updateKanbanConfig(
   input: UpdateKanbanConfigInput,
 ): Promise<KanbanConfig> {
   const { data } = await kanbanConfigClient.put<KanbanConfig>("", input)
+  return data
+}
+
+export async function addKanbanLanguage(
+  input: AddKanbanLanguageInput,
+): Promise<KanbanConfig> {
+  const { data } = await kanbanConfigClient.post<KanbanConfig>(
+    "/languages",
+    input,
+  )
+  return data
+}
+
+export async function removeKanbanLanguage(code: string): Promise<KanbanConfig> {
+  const { data } = await kanbanConfigClient.delete<KanbanConfig>(
+    `/languages/${encodeURIComponent(code)}`,
+  )
   return data
 }

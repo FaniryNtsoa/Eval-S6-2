@@ -1,22 +1,34 @@
 import type { KanbanStatusId } from "@/modules/assistance/constants/kanban"
 
+export type KanbanLanguageCode = string
+
+export interface KanbanLanguage {
+  code: KanbanLanguageCode
+  name: string
+}
+
 export interface KanbanColumnConfig {
   statusId: KanbanStatusId
-  labelFr: string
-  labelMg: string
   backgroundColor: string
+  labels: Record<KanbanLanguageCode, string>
 }
 
 export interface KanbanConfig {
+  languages: KanbanLanguage[]
   columns: KanbanColumnConfig[]
 }
 
 export interface UpdateKanbanColumnInput {
   statusId: KanbanStatusId
-  labelMg: string
   backgroundColor: string
+  labels: Record<KanbanLanguageCode, string>
 }
 
 export interface UpdateKanbanConfigInput {
   columns: UpdateKanbanColumnInput[]
+}
+
+export interface AddKanbanLanguageInput {
+  code: string
+  name: string
 }

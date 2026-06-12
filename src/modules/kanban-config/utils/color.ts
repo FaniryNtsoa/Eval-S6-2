@@ -16,18 +16,3 @@ export function darkenHexColor(hex: string, amount = 0.35): string {
 
   return `#${toChannel(red)}${toChannel(green)}${toChannel(blue)}`
 }
-
-export function formatBilingualLabel(labelMg: string, labelFr: string): string {
-  const trimmedMg = labelMg.trim()
-  const trimmedFr = labelFr.trim()
-
-  if (!trimmedMg) {
-    return trimmedFr
-  }
-
-  if (!trimmedFr) {
-    return trimmedMg
-  }
-
-  return `${trimmedMg} / ${trimmedFr}`
-}

@@ -2,13 +2,17 @@ import { useCallback, useEffect, useState } from "react"
 
 import { DEFAULT_KANBAN_CONFIG } from "@/modules/kanban-config/constants/defaults"
 import {
+  addKanbanLanguage,
   fetchKanbanConfig,
+  removeKanbanLanguage,
   updateKanbanConfig,
 } from "@/modules/kanban-config/services/kanbanConfigService"
 import type {
+  AddKanbanLanguageInput,
   KanbanConfig,
   UpdateKanbanConfigInput,
 } from "@/modules/kanban-config/types/kanban-config.types"
+import { getKanbanApiErrorMessage } from "@/modules/kanban-config/utils/errors"
 
 interface UseKanbanConfigResult {
   config: KanbanConfig
@@ -17,6 +21,8 @@ interface UseKanbanConfigResult {
   error: string | null
   reload: () => Promise<void>
   save: (input: UpdateKanbanConfigInput) => Promise<boolean>
+  addLanguage: (input: AddKanbanLanguageInput) => Promise<boolean>
+  removeLanguage: (code: string) => Promise<boolean>
 }
 
 export function useKanbanConfig(): UseKanbanConfigResult {
@@ -35,9 +41,10 @@ export function useKanbanConfig(): UseKanbanConfigResult {
     } catch (cause) {
       setConfig(DEFAULT_KANBAN_CONFIG)
       setError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible de charger la configuration Kanban",
+        getKanbanApiErrorMessage(
+          cause,
+          "Impossible de charger la configuration Kanban",
+        ),
       )
     } finally {
       setIsLoading(false)
@@ -58,9 +65,46 @@ export function useKanbanConfig(): UseKanbanConfigResult {
       return true
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible d'enregistrer la configuration Kanban",
+        getKanbanApiErrorMessage(
+          cause,
+          "Impossible d'enregistrer la configuration Kanban",
+        ),
+      )
+      return false
+    } finally {
+      setIsSaving(false)
+    }
+  }, [])
+
+  const addLanguage = useCallback(async (input: AddKanbanLanguageInput) => {
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      const nextConfig = await addKanbanLanguage(input)
+      setConfig(nextConfig)
+      return true
+    } catch (cause) {
+      setError(
+        getKanbanApiErrorMessage(cause, "Impossible d'ajouter la langue"),
+      )
+      return false
+    } finally {
+      setIsSaving(false)
+    }
+  }, [])
+
+  const removeLanguage = useCallback(async (code: string) => {
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      const nextConfig = await removeKanbanLanguage(code)
+      setConfig(nextConfig)
+      return true
+    } catch (cause) {
+      setError(
+        getKanbanApiErrorMessage(cause, "Impossible de supprimer la langue"),
       )
       return false
     } finally {
@@ -75,5 +119,7 @@ export function useKanbanConfig(): UseKanbanConfigResult {
     error,
     reload,
     save,
+    addLanguage,
+    removeLanguage,
   }
 }

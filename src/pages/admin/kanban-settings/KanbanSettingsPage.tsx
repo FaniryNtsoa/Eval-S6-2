@@ -4,8 +4,10 @@ import { Loader2, Palette, Save } from "lucide-react"
 import { KANBAN_STATUSES } from "@/modules/assistance/constants/kanban"
 import { KANBAN_STATUS_LABELS_FR } from "@/modules/kanban-config/constants/defaults"
 import { useKanbanConfig } from "@/modules/kanban-config/hooks/useKanbanConfig"
+import { useKanbanDisplayLanguage } from "@/modules/kanban-config/hooks/useKanbanDisplayLanguage"
 import type { UpdateKanbanColumnInput } from "@/modules/kanban-config/types/kanban-config.types"
-import { formatBilingualLabel } from "@/modules/kanban-config/utils/color"
+import { resolveColumnLabel } from "@/modules/kanban-config/utils/config"
+import { KanbanLanguageSelector } from "@/modules/kanban-config/components/KanbanLanguageSelector"
 import { AdminPageHeader } from "@/shared/components/layout/admin/AdminPageHeader"
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
 import { Button } from "@/shared/components/ui/button"
@@ -29,8 +31,8 @@ function buildFormState(
       column.statusId,
       {
         statusId: column.statusId,
-        labelMg: column.labelMg,
         backgroundColor: column.backgroundColor,
+        labels: { ...column.labels },
       },
     ]),
   )
@@ -38,6 +40,9 @@ function buildFormState(
 
 export function KanbanSettingsPage() {
   const { config, isLoading, isSaving, error, save } = useKanbanConfig()
+  const { displayLanguage, setDisplayLanguage } = useKanbanDisplayLanguage(
+    config.languages,
+  )
   const [formState, setFormState] = useState<ColumnFormState>({})
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -79,7 +84,7 @@ export function KanbanSettingsPage() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="Personnalisation Kanban"
-        description="Modifiez les couleurs de fond et les libellés malgaches des colonnes du tableau public."
+        description="Modifiez les couleurs de fond des colonnes du tableau public."
       />
 
       {error && (
@@ -110,29 +115,18 @@ export function KanbanSettingsPage() {
                 <CardDescription>
                   Aperçu du libellé :{" "}
                   {column
-                    ? formatBilingualLabel(column.labelMg, labelFr)
+                    ? resolveColumnLabel(
+                        {
+                          statusId,
+                          backgroundColor: column.backgroundColor,
+                          labels: column.labels,
+                        },
+                        displayLanguage,
+                      )
                     : labelFr}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor={`label-mg-${statusId}`}>
-                    Libellé malgache
-                  </Label>
-                  <Input
-                    id={`label-mg-${statusId}`}
-                    value={column?.labelMg ?? ""}
-                    disabled={isLoading || isSaving}
-                    onChange={(event) =>
-                      updateColumn(statusId, { labelMg: event.target.value })
-                    }
-                    placeholder="Ex. Vaovao"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Français (fixe) : {labelFr}
-                  </p>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor={`color-${statusId}`}>
                     Couleur de fond (header &amp; body)
@@ -191,25 +185,39 @@ export function KanbanSettingsPage() {
             rechargement de la page.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
-          {KANBAN_STATUSES.map((statusId) => {
-            const column = formState[statusId]
-            const labelFr = KANBAN_STATUS_LABELS_FR[statusId]
+        <CardContent className="space-y-4">
+          <KanbanLanguageSelector
+            languages={config.languages}
+            value={displayLanguage}
+            onChange={setDisplayLanguage}
+          />
+          <div className="flex flex-wrap gap-3">
+            {KANBAN_STATUSES.map((statusId) => {
+              const column = formState[statusId]
+              const labelFr = KANBAN_STATUS_LABELS_FR[statusId]
 
-            return (
-              <div
-                key={statusId}
-                className="min-w-[180px] flex-1 rounded-xl border px-4 py-3"
-                style={{ backgroundColor: column?.backgroundColor }}
-              >
-                <p className="text-sm font-semibold">
-                  {column
-                    ? formatBilingualLabel(column.labelMg, labelFr)
-                    : labelFr}
-                </p>
-              </div>
-            )
-          })}
+              return (
+                <div
+                  key={statusId}
+                  className="min-w-[180px] flex-1 rounded-xl border px-4 py-3"
+                  style={{ backgroundColor: column?.backgroundColor }}
+                >
+                  <p className="text-sm font-semibold">
+                    {column
+                      ? resolveColumnLabel(
+                          {
+                            statusId,
+                            backgroundColor: column.backgroundColor,
+                            labels: column.labels,
+                          },
+                          displayLanguage,
+                        )
+                      : labelFr}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
         </CardContent>
       </Card>
     </div>

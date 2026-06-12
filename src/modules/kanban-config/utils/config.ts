@@ -1,8 +1,13 @@
 import type { KanbanStatusId } from "@/modules/assistance/constants/kanban"
-import { DEFAULT_KANBAN_CONFIG } from "@/modules/kanban-config/constants/defaults"
+import {
+  DEFAULT_KANBAN_CONFIG,
+  KANBAN_FRENCH_LANGUAGE_CODE,
+  KANBAN_STATUS_LABELS_FR,
+} from "@/modules/kanban-config/constants/defaults"
 import type {
   KanbanColumnConfig,
   KanbanConfig,
+  KanbanLanguageCode,
 } from "@/modules/kanban-config/types/kanban-config.types"
 
 const DEFAULT_COLUMN_MAP = Object.fromEntries(
@@ -23,4 +28,24 @@ export function buildColumnConfigMap(
   }
 
   return map
+}
+
+export function resolveColumnLabel(
+  column: KanbanColumnConfig,
+  languageCode: KanbanLanguageCode,
+): string {
+  const label = column.labels[languageCode]?.trim()
+
+  if (label) {
+    return label
+  }
+
+  if (languageCode !== KANBAN_FRENCH_LANGUAGE_CODE) {
+    const frenchFallback = column.labels[KANBAN_FRENCH_LANGUAGE_CODE]?.trim()
+    if (frenchFallback) {
+      return frenchFallback
+    }
+  }
+
+  return KANBAN_STATUS_LABELS_FR[column.statusId]
 }

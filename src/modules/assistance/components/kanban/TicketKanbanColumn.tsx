@@ -5,11 +5,12 @@ import {
 } from "@dnd-kit/sortable"
 
 import type { KanbanStatusId } from "@/modules/assistance/constants/kanban"
-import type { KanbanColumnConfig } from "@/modules/kanban-config/types/kanban-config.types"
-import {
-  darkenHexColor,
-  formatBilingualLabel,
-} from "@/modules/kanban-config/utils/color"
+import type {
+  KanbanColumnConfig,
+  KanbanLanguageCode,
+} from "@/modules/kanban-config/types/kanban-config.types"
+import { resolveColumnLabel } from "@/modules/kanban-config/utils/config"
+import { darkenHexColor } from "@/modules/kanban-config/utils/color"
 import { TicketKanbanCard } from "@/modules/assistance/components/kanban/TicketKanbanCard"
 import type { GlpiTicketListItem } from "@/modules/assistance/types/ticket.types"
 import { Badge } from "@/shared/components/ui/badge"
@@ -21,6 +22,7 @@ import { Plus } from "lucide-react"
 interface TicketKanbanColumnProps {
   statusId: KanbanStatusId
   columnConfig: KanbanColumnConfig
+  displayLanguage: KanbanLanguageCode
   tickets: GlpiTicketListItem[]
   isLoading: boolean
   onOpenTicket: (ticketId: number) => void
@@ -30,6 +32,7 @@ interface TicketKanbanColumnProps {
 export function TicketKanbanColumn({
   statusId,
   columnConfig,
+  displayLanguage,
   tickets,
   isLoading,
   onOpenTicket,
@@ -37,10 +40,7 @@ export function TicketKanbanColumn({
 }: TicketKanbanColumnProps) {
   const backgroundColor = columnConfig.backgroundColor
   const dotColor = darkenHexColor(backgroundColor)
-  const columnLabel = formatBilingualLabel(
-    columnConfig.labelMg,
-    columnConfig.labelFr,
-  )
+  const columnLabel = resolveColumnLabel(columnConfig, displayLanguage)
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${statusId}`,
     data: { type: "column", statusId },
