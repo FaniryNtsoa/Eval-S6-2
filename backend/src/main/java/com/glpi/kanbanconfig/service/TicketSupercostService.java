@@ -1,11 +1,14 @@
 package com.glpi.kanbanconfig.service;
 
+import com.glpi.kanbanconfig.dto.SaveTicketReopenCostRequest;
 import com.glpi.kanbanconfig.dto.SaveTicketSupercostRequest;
 import com.glpi.kanbanconfig.dto.TicketSupercostDto;
 import com.glpi.kanbanconfig.model.TicketSupercost;
 import com.glpi.kanbanconfig.repository.TicketSupercostRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -22,22 +25,58 @@ public class TicketSupercostService {
 
     public List<TicketSupercostDto> listAll() {
         return repository.findAll().stream()
-                .sorted(Comparator.comparing(TicketSupercost::getTicketId))
+                .sorted(Comparator.comparing(TicketSupercost::getTicketId)
+                        .thenComparing(TicketSupercost::getId))
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
     public TicketSupercostDto save(SaveTicketSupercostRequest request) {
-        TicketSupercost entity = repository.findByTicketId(request.ticketId())
-                .orElseGet(TicketSupercost::new);
+        TicketSupercost entity = new TicketSupercost(
+                request.ticketId(),
+                request.amount(),
+                TicketSupercost.MOVEMENT_SUPERCOST,
+                Instant.now().toString()
+        );
 
-        entity.setTicketId(request.ticketId());
-        entity.setAmount(request.amount());
+        return toDto(repository.save(entity));
+    }
 
-        if (entity.getCreatedAt() == null) {
-            entity.setCreatedAt(Instant.now().toString());
-        }
+    @Transactional
+    public void cancelLastSupercost(Integer ticketId) {
+        TicketSupercost last = repository
+                .findTopByTicketIdAndMovementTypeOrderByIdDesc(
+                        ticketId,
+                        TicketSupercost.MOVEMENT_SUPERCOST
+                )
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Aucun supercost à annuler pour ce ticket"
+                ));
+
+        repository.delete(last);
+    }
+
+    @Transactional
+    public TicketSupercostDto saveReopenCost(SaveTicketReopenCostRequest request) {
+        TicketSupercost last = repository
+                .findTopByTicketIdAndMovementTypeOrderByIdDesc(
+                        request.ticketId(),
+                        TicketSupercost.MOVEMENT_SUPERCOST
+                )
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Aucun supercost de référence pour ce ticket"
+                ));
+
+        double reopenAmount = last.getAmount() * request.percentage() / 100.0;
+        TicketSupercost entity = new TicketSupercost(
+                request.ticketId(),
+                reopenAmount,
+                TicketSupercost.MOVEMENT_REOPEN,
+                Instant.now().toString()
+        );
 
         return toDto(repository.save(entity));
     }
@@ -52,6 +91,7 @@ public class TicketSupercostService {
                 entity.getId(),
                 entity.getTicketId(),
                 entity.getAmount(),
+                entity.getMovementType(),
                 entity.getCreatedAt()
         );
     }

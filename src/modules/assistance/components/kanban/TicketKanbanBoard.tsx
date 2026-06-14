@@ -10,7 +10,7 @@ import {
 } from "@dnd-kit/core"
 
 import { TicketKanbanColumn } from "@/modules/assistance/components/kanban/TicketKanbanColumn"
-import { TicketStatusChangeDialog } from "@/modules/assistance/components/kanban/TicketStatusChangeDialog"
+import { TicketStatusChangeDialog, type ReopenChoice } from "@/modules/assistance/components/kanban/TicketStatusChangeDialog"
 import {
   KANBAN_STATUSES,
   getStatusChangeDialogKind,
@@ -52,6 +52,8 @@ interface TicketKanbanBoardProps {
     statusId: KanbanStatusId,
     comment?: string,
     supercost?: number,
+    reopenChoice?: ReopenChoice,
+    reopenPercentage?: number,
   ) => Promise<void>
   onAddTicket: () => void
 }
@@ -116,8 +118,17 @@ export function TicketKanbanBoard({
     toColumn: KanbanStatusId,
     comment?: string,
     supercost?: number,
+    reopenChoice?: ReopenChoice,
+    reopenPercentage?: number,
   ) => {
-    await onStatusChange(ticketId, toColumn, comment, supercost)
+    await onStatusChange(
+      ticketId,
+      toColumn,
+      comment,
+      supercost,
+      reopenChoice,
+      reopenPercentage,
+    )
     setPendingChange(null)
   }
 
@@ -256,6 +267,20 @@ export function TicketKanbanBoard({
             pendingChange.toColumn,
             comment,
             supercost,
+          )
+        }}
+        onReopenChoice={async (choice, percentage) => {
+          if (!pendingChange) {
+            return
+          }
+
+          await applyStatusChange(
+            pendingChange.ticketId,
+            pendingChange.toColumn,
+            undefined,
+            undefined,
+            choice,
+            percentage,
           )
         }}
       />

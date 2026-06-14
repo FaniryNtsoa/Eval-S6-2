@@ -47,8 +47,17 @@ export function TicketsKanbanPage() {
     statusId: KanbanStatusId,
     comment?: string,
     supercost?: number,
+    reopenChoice?: "cancel" | "reopen",
+    reopenPercentage?: number,
   ) => {
-    await changeTicketStatus({ ticketId, statusId, comment, supercost })
+    await changeTicketStatus({
+      ticketId,
+      statusId,
+      comment,
+      supercost,
+      reopenChoice,
+      reopenPercentage,
+    })
   }
 
   return (

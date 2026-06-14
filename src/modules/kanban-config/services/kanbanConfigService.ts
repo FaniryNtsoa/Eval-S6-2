@@ -5,6 +5,7 @@ import { DEFAULT_KANBAN_CONFIG } from "@/modules/kanban-config/constants/default
 import type {
   AddKanbanLanguageInput,
   KanbanConfig,
+  SaveTicketReopenCostInput,
   SaveTicketSupercostInput,
   TicketSupercost,
   UpdateKanbanConfigInput,
@@ -61,6 +62,20 @@ export async function saveSupercost(
 ): Promise<TicketSupercost> {
   const { data } = await kanbanConfigClient.post<TicketSupercost>(
     "/supercosts",
+    input,
+  )
+  return data
+}
+
+export async function cancelLastSupercost(ticketId: number): Promise<void> {
+  await kanbanConfigClient.delete(`/supercosts/ticket/${ticketId}/last`)
+}
+
+export async function saveReopenCost(
+  input: SaveTicketReopenCostInput,
+): Promise<TicketSupercost> {
+  const { data } = await kanbanConfigClient.post<TicketSupercost>(
+    "/supercosts/reopen",
     input,
   )
   return data

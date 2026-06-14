@@ -29,11 +29,13 @@ const dialogCopy: Record<
   reopen: {
     title: "Rouvrir le ticket",
     description:
-      "Indiquez la raison de la réouverture avant de changer le statut.",
+      "Ce ticket était terminé. Choisissez une annulation (erreur de classement) ou une réouverture avec frais.",
     label: "Motif de réouverture",
     placeholder: "Pourquoi ce ticket doit-il être traité à nouveau ?",
   },
 }
+
+export type ReopenChoice = "cancel" | "reopen"
 
 interface TicketStatusChangeDialogProps {
   open: boolean
@@ -42,6 +44,7 @@ interface TicketStatusChangeDialogProps {
   isSubmitting: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: (comment: string, supercost?: number) => Promise<void>
+  onReopenChoice?: (choice: ReopenChoice, percentage?: number) => Promise<void>
 }
 
 export function TicketStatusChangeDialog({
@@ -51,21 +54,28 @@ export function TicketStatusChangeDialog({
   isSubmitting,
   onOpenChange,
   onConfirm,
+  onReopenChoice,
 }: TicketStatusChangeDialogProps) {
   const [comment, setComment] = useState("")
   const [supercost, setSupercost] = useState("")
+  const [percentage, setPercentage] = useState("10")
   const copy = kind ? dialogCopy[kind] : null
 
   useEffect(() => {
     if (!open) {
       setComment("")
       setSupercost("")
+      setPercentage("10")
     }
   }, [open])
 
   const parsedSupercost = Number.parseFloat(supercost.replace(",", "."))
   const isSupercostValid =
     kind !== "solution" || (!Number.isNaN(parsedSupercost) && parsedSupercost > 0)
+
+  const parsedPercentage = Number.parseFloat(percentage.replace(",", "."))
+  const isPercentageValid =
+    !Number.isNaN(parsedPercentage) && parsedPercentage > 0
 
   const handleSubmit = async () => {
     if (!comment.trim() || !isSupercostValid) {
@@ -76,6 +86,21 @@ export function TicketStatusChangeDialog({
       await onConfirm(
         comment.trim(),
         kind === "solution" ? parsedSupercost : undefined,
+      )
+    } catch {
+      // L'erreur est affichée par la page parente via usePublicTickets.
+    }
+  }
+
+  const handleReopenChoice = async (choice: ReopenChoice) => {
+    if (choice === "reopen" && !isPercentageValid) {
+      return
+    }
+
+    try {
+      await onReopenChoice?.(
+        choice,
+        choice === "reopen" ? parsedPercentage : undefined,
       )
     } catch {
       // L'erreur est affichée par la page parente via usePublicTickets.
@@ -97,58 +122,109 @@ export function TicketStatusChangeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="status-change-comment">{copy?.label}</Label>
-            <textarea
-              id="status-change-comment"
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder={copy?.placeholder}
-              rows={4}
-              disabled={isSubmitting}
-              className={cn(
-                "border-input bg-background ring-offset-background placeholder:text-muted-foreground",
-                "focus-visible:ring-ring flex min-h-[100px] w-full rounded-md border px-3 py-2 text-sm",
-                "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-              )}
-            />
-          </div>
-
-          {kind === "solution" && (
-            <div className="space-y-2">
-              <Label htmlFor="status-change-supercost">Supercost (coût fixe)</Label>
-              <Input
-                id="status-change-supercost"
-                type="number"
-                min="0"
-                step="0.01"
-                value={supercost}
-                onChange={(event) => setSupercost(event.target.value)}
-                placeholder="Ex. 15000"
+        {kind === "reopen" ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border/60 p-4">
+              <p className="mb-3 text-sm text-muted-foreground">
+                Erreur de classement : supprime le dernier supercost enregistré
+                pour ce ticket.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
                 disabled={isSubmitting}
-              />
+                onClick={() => void handleReopenChoice("cancel")}
+              >
+                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                Annulation
+              </Button>
             </div>
-          )}
-        </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Annuler
-          </Button>
-          <Button
-            onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !comment.trim() || !isSupercostValid}
-          >
-            {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-            Confirmer
-          </Button>
-        </DialogFooter>
+            <div className="rounded-lg border border-border/60 p-4 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Réouverture : frais calculés sur le dernier supercost.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="status-change-percentage">Pourcentage (%)</Label>
+                <Input
+                  id="status-change-percentage"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={percentage}
+                  onChange={(event) => setPercentage(event.target.value)}
+                  placeholder="10"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <Button
+                className="w-full"
+                disabled={isSubmitting || !isPercentageValid}
+                onClick={() => void handleReopenChoice("reopen")}
+              >
+                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                Réouverture
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="status-change-comment">{copy?.label}</Label>
+                <textarea
+                  id="status-change-comment"
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  placeholder={copy?.placeholder}
+                  rows={4}
+                  disabled={isSubmitting}
+                  className={cn(
+                    "border-input bg-background ring-offset-background placeholder:text-muted-foreground",
+                    "focus-visible:ring-ring flex min-h-[100px] w-full rounded-md border px-3 py-2 text-sm",
+                    "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                    "disabled:cursor-not-allowed disabled:opacity-50",
+                  )}
+                />
+              </div>
+
+              {kind === "solution" && (
+                <div className="space-y-2">
+                  <Label htmlFor="status-change-supercost">
+                    Supercost (coût fixe)
+                  </Label>
+                  <Input
+                    id="status-change-supercost"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={supercost}
+                    onChange={(event) => setSupercost(event.target.value)}
+                    placeholder="Ex. 15000"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Fermer
+              </Button>
+              <Button
+                onClick={() => void handleSubmit()}
+                disabled={isSubmitting || !comment.trim() || !isSupercostValid}
+              >
+                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                Confirmer
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

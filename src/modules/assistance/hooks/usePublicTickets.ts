@@ -12,11 +12,14 @@ import type {
   GlpiTicketDetail,
   GlpiTicketListItem,
 } from "@/modules/assistance/types/ticket.types"
-import { saveSupercost } from "@/modules/kanban-config/services/kanbanConfigService"
+import { saveSupercost, cancelLastSupercost, saveReopenCost } from "@/modules/kanban-config/services/kanbanConfigService"
 import { getErrorMessage } from "@/modules/import/common/services/glpiResourceService"
+import type { ReopenChoice } from "@/modules/assistance/components/kanban/TicketStatusChangeDialog"
 
 export interface ChangeTicketStatusInput extends UpdatePublicTicketStatusInput {
   supercost?: number
+  reopenChoice?: ReopenChoice
+  reopenPercentage?: number
 }
 
 export function usePublicTickets() {
@@ -98,6 +101,19 @@ export function usePublicTickets() {
           await saveSupercost({
             ticketId: input.ticketId,
             amount: input.supercost,
+          })
+        }
+
+        if (input.reopenChoice === "cancel") {
+          await cancelLastSupercost(input.ticketId)
+        } else if (
+          input.reopenChoice === "reopen" &&
+          input.reopenPercentage != null &&
+          input.reopenPercentage > 0
+        ) {
+          await saveReopenCost({
+            ticketId: input.ticketId,
+            percentage: input.reopenPercentage,
           })
         }
 

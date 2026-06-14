@@ -33,6 +33,7 @@ export function CostsPage() {
 
   const grandTotal = rows.reduce((sum, row) => sum + row.total, 0)
   const grandSupercost = rows.reduce((sum, row) => sum + row.supercost, 0)
+  const grandReopen = rows.reduce((sum, row) => sum + row.reopenCost, 0)
   const grandGlpi = rows.reduce((sum, row) => sum + row.glpiCost, 0)
 
   return (
@@ -48,8 +49,8 @@ export function CostsPage() {
             </h1>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Synthèse des coûts GLPI et des supercoûts locaux, répartis
-            équitablement entre les éléments liés à chaque ticket.
+            Synthèse des coûts GLPI, supercoûts et frais de réouverture locaux,
+            répartis équitablement entre les éléments liés à chaque ticket.
           </p>
         </div>
 
@@ -71,12 +72,20 @@ export function CostsPage() {
         </Alert>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Supercost (SQLite)</CardDescription>
             <CardTitle className="text-2xl">
               {isLoading ? "—" : formatAmount(grandSupercost)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Frais de réouverture</CardDescription>
+            <CardTitle className="text-2xl">
+              {isLoading ? "—" : formatAmount(grandReopen)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -124,6 +133,7 @@ export function CostsPage() {
                   <TableRow>
                     <TableHead>Type d&apos;élément</TableHead>
                     <TableHead className="text-right">Supercost</TableHead>
+                    <TableHead className="text-right">Réouverture</TableHead>
                     <TableHead className="text-right">Coût GLPI</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                   </TableRow>
@@ -139,6 +149,9 @@ export function CostsPage() {
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         {formatAmount(row.supercost)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {formatAmount(row.reopenCost)}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         {formatAmount(row.glpiCost)}

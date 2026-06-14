@@ -2,6 +2,7 @@ package com.glpi.kanbanconfig.controller;
 
 import com.glpi.kanbanconfig.dto.AddKanbanLanguageRequest;
 import com.glpi.kanbanconfig.dto.KanbanConfigResponse;
+import com.glpi.kanbanconfig.dto.SaveTicketReopenCostRequest;
 import com.glpi.kanbanconfig.dto.SaveTicketSupercostRequest;
 import com.glpi.kanbanconfig.dto.TicketSupercostDto;
 import com.glpi.kanbanconfig.dto.UpdateKanbanConfigRequest;
@@ -62,6 +63,16 @@ public class KanbanConfigController {
     @PostMapping("/supercosts")
     public TicketSupercostDto saveSupercost(@Valid @RequestBody SaveTicketSupercostRequest request) {
         return supercostService.save(request);
+    }
+
+    @DeleteMapping("/supercosts/ticket/{ticketId}/last")
+    public void cancelLastSupercost(@PathVariable Integer ticketId) {
+        supercostService.cancelLastSupercost(ticketId);
+    }
+
+    @PostMapping("/supercosts/reopen")
+    public TicketSupercostDto saveReopenCost(@Valid @RequestBody SaveTicketReopenCostRequest request) {
+        return supercostService.saveReopenCost(request);
     }
 
     @DeleteMapping("/supercosts")
