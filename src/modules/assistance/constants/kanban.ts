@@ -28,7 +28,7 @@ export function getStatusChangeDialogKind(
     return "solution"
   }
 
-  if (fromColumn === 6) {
+  if (fromColumn === 6 && toColumn === 2) {
     return "reopen"
   }
 
