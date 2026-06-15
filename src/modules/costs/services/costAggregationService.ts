@@ -9,7 +9,7 @@ import { fetchAllSupercosts } from "@/modules/kanban-config/services/kanbanConfi
 import { listItemTicketsForTicket } from "@/modules/import/common/services/legacyItemTicketService"
 
 function sumByTicket(
-  entries: { ticketId: number; amount: number; movementType: string }[],
+  entries: { ticketId: number; amount: number; movementType?: string }[],
   movementType: string,
 ): Record<number, number> {
   const totals: Record<number, number> = {}
