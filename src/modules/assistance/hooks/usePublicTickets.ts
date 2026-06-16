@@ -96,7 +96,7 @@ export function usePublicTickets() {
         if (
           input.statusId === 6 &&
           input.supercost != null &&
-          input.supercost > 0
+          input.supercost >= 0
         ) {
           await saveSupercost({
             ticketId: input.ticketId,

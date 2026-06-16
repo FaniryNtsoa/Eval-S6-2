@@ -71,7 +71,7 @@ export async function traiter(
     }
   } else if (action === "close") {
     await patchItem(TICKET_ENDPOINT, ticketId, { status: { id: 6 } })
-    if (value != null && value > 0) {
+    if (value != null && value >= 0) {
       await saveSupercost({ ticketId, amount: value })
     }
   } else {

@@ -71,7 +71,7 @@ export function TicketStatusChangeDialog({
 
   const parsedSupercost = Number.parseFloat(supercost.replace(",", "."))
   const isSupercostValid =
-    kind !== "solution" || (!Number.isNaN(parsedSupercost) && parsedSupercost > 0)
+    kind !== "solution" || (!Number.isNaN(parsedSupercost) && parsedSupercost >= 0)
 
   const parsedPercentage = Number.parseFloat(percentage.replace(",", "."))
   const isPercentageValid =
