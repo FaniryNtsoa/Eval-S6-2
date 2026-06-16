@@ -18,6 +18,7 @@ const pageTitles: Record<string, string> = {
   [ROUTES.admin.resetData]: "Réinitialisation",
   [ROUTES.admin.kanbanSettings]: "Personnalisation Kanban",
   [ROUTES.admin.statusLabels]: "Libellés de statut",
+  [ROUTES.admin.importMvt]: "Import mouvements",
 }
 
 export function AdminLayout() {

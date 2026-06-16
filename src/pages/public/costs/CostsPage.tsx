@@ -1,7 +1,15 @@
 import { RefreshCw, Wallet } from "lucide-react"
-
+import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog"
 import { useCostAggregation } from "@/modules/costs/hooks/useCostAggregation"
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert"
+import type { ItemTypeCostRow } from "@/modules/costs/types/cost-aggregation.types"
 import { Button } from "@/shared/components/ui/button"
 import {
   Card,
@@ -23,18 +31,19 @@ import { cn } from "@/shared/lib/utils"
 
 function formatAmount(value: number): string {
   return new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
   }).format(value)
 }
 
 export function CostsPage() {
   const { rows, isLoading, error, reload } = useCostAggregation()
-
+  const [selectedRow, setSelectedRow] = useState<ItemTypeCostRow | null>(null)
   const grandTotal = rows.reduce((sum, row) => sum + row.total, 0)
   const grandSupercost = rows.reduce((sum, row) => sum + row.supercost, 0)
   const grandReopen = rows.reduce((sum, row) => sum + row.reopenCost, 0)
   const grandGlpi = rows.reduce((sum, row) => sum + row.glpiCost, 0)
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -140,7 +149,7 @@ export function CostsPage() {
                 </TableHeader>
                 <TableBody>
                   {rows.map((row) => (
-                    <TableRow key={row.itemType}>
+                    <TableRow key={row.itemType} className="cursor-poinnter hover:bg-muted/50" onClick={() => setSelectedRow(row)}>
                       <TableCell>
                         <div className="font-medium">{row.itemTypeLabel}</div>
                         <div className="font-mono text-xs text-muted-foreground">
@@ -167,6 +176,45 @@ export function CostsPage() {
           )}
         </CardContent>
       </Card>
+      <Dialog open={selectedRow != null} onOpenChange={(o) => !o && setSelectedRow(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedRow?.itemTypeLabel}</DialogTitle>
+            <DialogDescription>
+              Détail des contributions — total {selectedRow ? formatAmount(selectedRow.total) : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ticket</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead className="text-right">Montant</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {selectedRow?.details.map((line, i) => (
+                <TableRow key={`${line.ticketId}-${line.itemId}-${line.source}-${i}`}>
+                  <TableCell className="font-mono text-xs">{line.ticketRef}</TableCell>
+                  <TableCell className="font-mono text-xs">{line.itemRef}</TableCell>
+                  <TableCell>
+                    {line.source === "supercost"
+                      ? "Supercost"
+                      : line.source === "reopen"
+                        ? "Réouverture"
+                        : "GLPI"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono font-medium">
+                    {formatAmount(line.amount)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
     </div>
+
   )
 }

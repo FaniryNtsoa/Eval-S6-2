@@ -16,6 +16,8 @@ import { CostsPage } from "@/pages/public/costs/CostsPage"
 import { TicketsKanbanPage } from "@/pages/public/tickets/TicketsKanbanPage"
 import { ROUTES } from "@/shared/constants/routes"
 import { StatusLabelsPage } from "@/pages/admin/status-labels/StatuswLabelsPage";
+import { MvtImportPage } from "@/pages/admin/import/MvtImportPage"
+
 
 export const router = createBrowserRouter([
   {
@@ -80,6 +82,10 @@ export const router = createBrowserRouter([
               {
                 path: "status-labels",
                 element: <StatusLabelsPage />,
+              },
+              {
+                path: "import-mvt",
+                element: <MvtImportPage />,
               },
             ],
           },

@@ -7,7 +7,8 @@ import type { ItemTypeCostRow } from "@/modules/costs/types/cost-aggregation.typ
 import { sumGlpiCosts } from "@/modules/assistance/utils/ticketCost"
 import { fetchAllSupercosts } from "@/modules/kanban-config/services/kanbanConfigService"
 import { listItemTicketsForTicket } from "@/modules/import/common/services/legacyItemTicketService"
-
+import type { ItemTypeCostDetailLine } from "@/modules/costs/types/cost-aggregation.types"
+import { fetchElements } from "@/modules/inventory/services/elementService"
 function sumByTicket(
   entries: { ticketId: number; amount: number; movementType?: string }[],
   movementType: string,
@@ -31,13 +32,20 @@ export async function aggregateCostsByItemType(): Promise<ItemTypeCostRow[]> {
     fetchPublicTickets(),
     fetchAllSupercosts(),
   ])
+  const elements = await fetchElements()
+  const itemRefByKey = new Map(
+    elements.map((el) => [
+      `${el.itemType}:${el.id}`,
+      el.inventoryNumber?.trim() || el.name?.trim() || `#${el.id}`,
+    ]),
+  )
 
   const supercosts = sumByTicket(supercostEntries, "SUPERCOST")
   const reopenCosts = sumByTicket(supercostEntries, "REOPEN")
 
   const totals = new Map<
     string,
-    { supercost: number; reopenCost: number; glpiCost: number }
+    { supercost: number; reopenCost: number; glpiCost: number; details: ItemTypeCostDetailLine[] }
   >()
 
   for (const ticket of tickets) {
@@ -54,14 +62,36 @@ export async function aggregateCostsByItemType(): Promise<ItemTypeCostRow[]> {
     const superTotal = supercosts[ticket.id] ?? 0
     const reopenTotal = reopenCosts[ticket.id] ?? 0
     const share = 1 / links.length
-
+    const ticketRef = ticket.external_id?.trim() || String(ticket.id)
     for (const link of links) {
       const itemType = link.itemtype?.trim() || "Inconnu"
+      const itemId = link.items_id ?? 0
+      const itemRef =
+        itemRefByKey.get(`${itemType}:${itemId}`) ?? `#${itemId}`
       const current = totals.get(itemType) ?? {
         supercost: 0,
         reopenCost: 0,
         glpiCost: 0,
+        details: [],
       }
+      const pushDetail = (
+        source: ItemTypeCostDetailLine["source"],
+        ticketTotal: number,
+      ) => {
+        const amount = ticketTotal * share
+        if (amount <= 0) return
+        current.details.push({
+          ticketId: ticket.id,
+          ticketRef,
+          itemId,
+          itemRef,
+          source,
+          amount,
+        })
+      }
+      pushDetail("glpi", glpiTotal)
+      pushDetail("supercost", superTotal)
+      pushDetail("reopen", reopenTotal)
 
       current.glpiCost += glpiTotal * share
       current.supercost += superTotal * share
@@ -78,6 +108,7 @@ export async function aggregateCostsByItemType(): Promise<ItemTypeCostRow[]> {
       reopenCost: values.reopenCost,
       glpiCost: values.glpiCost,
       total: values.supercost + values.reopenCost + values.glpiCost,
+      details: values.details,
     }))
     .sort(
       (a, b) =>

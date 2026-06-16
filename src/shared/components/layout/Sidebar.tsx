@@ -4,6 +4,7 @@ import {
   Languages,
   LayoutDashboard,
   LogOut,
+  ArrowLeftRight,
   Palette,
   RotateCcw,
   Ticket,
@@ -38,6 +39,7 @@ const navItems = [
   },
   { to: ROUTES.admin.statusLabels, label: "Libellés MG", icon: Languages },
   { to: ROUTES.admin.resetData, label: "Réinitialiser", icon: RotateCcw },
+  { to: ROUTES.admin.importMvt, label: "Import mvt", icon: ArrowLeftRight },
 ]
 
 export function AdminSidebar() {
