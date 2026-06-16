@@ -12,12 +12,38 @@ import { Card, CardContent } from "@/shared/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/shared/components/ui/table"
+import { Label } from "@/shared/components/ui/label";
+import { Input } from "@/shared/components/ui/input";
+import { traiter } from "@/modules/import/orchestrator/services/mvtImportService";
+import { getErrorMessage } from "@/modules/import/common/services/glpiResourceService";
+import { CardHeader } from "@/shared/components/ui/card";
+import { CardTitle } from "@/shared/components/ui/card";
+import { CardDescription } from "@/shared/components/ui/card";
 
 export function MvtImportPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const { progress, report, isRunning, error, reset, runImport } = useMvtImport()
 
   const hasResults = (report?.totalRows ?? 0) > 0
+
+  const [a, setA] = useState("")       // ticket
+  const [b, setB] = useState("")       // mvt
+  const [c, setC] = useState("")       // valeur
+  const [resultat, setResultat] = useState("")
+  const [manualLoading, setManualLoading] = useState(false)
+
+  async function handleClickManuel() {
+    setManualLoading(true)
+    setResultat("")
+    try {
+      const { message } = await traiter(a, b, c)
+      setResultat(message)
+    } catch (e) {
+      setResultat(getErrorMessage(e))
+    } finally {
+      setManualLoading(false)
+    }
+  }
 
   return (
     <div className="page-shell">
@@ -31,6 +57,57 @@ export function MvtImportPage() {
         </Button>
       </AdminPageHeader>
 
+      {/* ── BLOC 1 : Saisie manuelle ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Saisie manuelle</CardTitle>
+          <CardDescription>
+            Ex. ticket=2, mvt=open, valeur=5 — ou cancel sans valeur
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="grid flex-1 gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label htmlFor="mvt-ticket">Ticket</Label>
+              <Input
+                id="mvt-ticket"
+                value={a}
+                onChange={(e) => setA(e.target.value)}
+                placeholder="2"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="mvt-action">Mvt</Label>
+              <Input
+                id="mvt-action"
+                value={b}
+                onChange={(e) => setB(e.target.value)}
+                placeholder="open / close / cancel"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="mvt-valeur">Valeur</Label>
+              <Input
+                id="mvt-valeur"
+                value={c}
+                onChange={(e) => setC(e.target.value)}
+                placeholder="5 (vide si cancel)"
+              />
+            </div>
+          </div>
+          <Button onClick={handleClickManuel} disabled={manualLoading || isRunning}>
+            {manualLoading ? "Traitement…" : "Traiter"}
+          </Button>
+        </CardContent>
+        {resultat && (
+          <CardContent className="pt-0">
+            <p className="text-sm"><strong>{resultat}</strong></p>
+          </CardContent>
+        )}
+      </Card>
+
+
+      {/* ── BLOC 2 : Import CSV (modale, inchangée) ── */}
       <ImportMvtFormModal
         open={modalOpen}
         onOpenChange={setModalOpen}

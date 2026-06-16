@@ -19,6 +19,7 @@ import type {
 } from "@/modules/import/common/types/import-result.types"
 import { runConcurrent } from "@/modules/import/common/utils/runConcurrent"
 import { useAuthStore } from "@/services/stores/authStore"
+import { clearAllSupercosts } from "@/modules/kanban-config/services/kanbanConfigService"
 
 type ProgressCallback = (progress: ResetProgress) => void
 
@@ -368,6 +369,23 @@ export async function resetImportData(
     userCollection.tasks.length +
     dropdownCollection.tasks.length
 
+    try {
+      await clearAllSupercosts()
+      collectionErrors.push({
+        category: "supercost",
+        label: "Coûts SQLite (supercost / reopen)",
+        status: "deleted",
+      })
+    } catch (error) {
+      collectionErrors.push({
+        category: "supercost",
+        label: "Coûts SQLite",
+        status: "error",
+        message: getErrorMessage(error),
+      })
+    }
+
+  console.log("total", total)
   if (total === 0) {
     const report = buildReport(collectionErrors)
 
@@ -380,6 +398,8 @@ export async function resetImportData(
           ? "Aucune donnée supprimée — erreurs lors de la collecte."
           : "Aucune donnée à supprimer.",
     })
+
+
 
     return report
   }

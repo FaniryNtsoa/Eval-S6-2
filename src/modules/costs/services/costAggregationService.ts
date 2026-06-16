@@ -36,7 +36,7 @@ export async function aggregateCostsByItemType(): Promise<ItemTypeCostRow[]> {
   const itemRefByKey = new Map(
     elements.map((el) => [
       `${el.itemType}:${el.id}`,
-      el.inventoryNumber?.trim() || el.name?.trim() || `#${el.id}`,
+       el.name?.trim() || el.inventoryNumber?.trim() || `#${el.id}`,
     ]),
   )
 
