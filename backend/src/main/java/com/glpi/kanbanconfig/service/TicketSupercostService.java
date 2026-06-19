@@ -60,25 +60,39 @@ public class TicketSupercostService {
 
     @Transactional
     public TicketSupercostDto saveReopenCost(SaveTicketReopenCostRequest request) {
-        TicketSupercost last = repository
-                .findTopByTicketIdAndMovementTypeOrderByIdDesc(
-                        request.ticketId(),
-                        TicketSupercost.MOVEMENT_SUPERCOST
-                )
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Aucun supercost de référence pour ce ticket"
-                ));
+        List<TicketSupercost> baseCosts = repository.findByTicketIdOrderByIdDesc(request.ticketId()).stream()
+                .filter(e -> TicketSupercost.MOVEMENT_SUPERCOST.equals(e.getMovementType()))
+                .toList();
 
-        double reopenAmount = last.getAmount() * request.percentage() / 100.0;
+        if (baseCosts.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Aucun supercost de référence pour ce ticket"
+            );
+        }
+
+        double baseAmount = computeBaseAmount(baseCosts, request.mode());
+        double reopenAmount = baseAmount * request.percentage() / 100.0;
+
         TicketSupercost entity = new TicketSupercost(
                 request.ticketId(),
                 reopenAmount,
                 TicketSupercost.MOVEMENT_REOPEN,
                 Instant.now().toString()
         );
+        entity.setMode(request.mode());
 
         return toDto(repository.save(entity));
+    }
+
+    private double computeBaseAmount(List<TicketSupercost> costs, int mode) {
+        return switch (mode) {
+            case 1 -> costs.get(0).getAmount();
+            case 2 -> costs.get(costs.size() - 1).getAmount();
+            case 3 -> costs.stream().mapToDouble(TicketSupercost::getAmount).average().orElse(0);
+            case 4 -> costs.stream().mapToDouble(TicketSupercost::getAmount).sum();
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mode invalide (1..4)");
+        };
     }
 
     @Transactional
@@ -92,7 +106,9 @@ public class TicketSupercostService {
                 entity.getTicketId(),
                 entity.getAmount(),
                 entity.getMovementType(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getMode()
         );
+        
     }
 }

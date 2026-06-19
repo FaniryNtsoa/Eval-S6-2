@@ -29,6 +29,8 @@ interface TicketKanbanColumnProps {
   onAddTicket?: () => void
 }
 
+
+
 export function TicketKanbanColumn({
   statusId,
   columnConfig,

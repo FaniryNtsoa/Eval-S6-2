@@ -5,6 +5,7 @@ public record TicketSupercostDto(
         int ticketId,
         double amount,
         String movementType,
-        String createdAt
+        String createdAt,
+        int mode
 ) {
 }

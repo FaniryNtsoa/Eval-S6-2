@@ -31,6 +31,9 @@ public class TicketSupercost {
     @Column(name = "movement_type", nullable = false)
     private String movementType = MOVEMENT_SUPERCOST;
 
+    @Column(name = "mode" , nullable = true)
+    private int mode ;
+
     public TicketSupercost() {
     }
 
@@ -79,5 +82,11 @@ public class TicketSupercost {
 
     public void setMovementType(String movementType) {
         this.movementType = movementType;
+    }
+    public int getMode(){
+       return this.mode;
+    }
+    public void setMode(int mode){
+        this.mode = mode;
     }
 }

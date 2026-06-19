@@ -39,6 +39,7 @@ export interface TicketSupercost {
   amount: number
   movementType?: "SUPERCOST" | "REOPEN"
   createdAt: string
+  mode?: number
 }
 
 export interface SaveTicketSupercostInput {
@@ -49,4 +50,5 @@ export interface SaveTicketSupercostInput {
 export interface SaveTicketReopenCostInput {
   ticketId: number
   percentage: number
+  mode: 1 | 2 | 3 | 4
 }

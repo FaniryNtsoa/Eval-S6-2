@@ -20,6 +20,7 @@ export interface ChangeTicketStatusInput extends UpdatePublicTicketStatusInput {
   supercost?: number
   reopenChoice?: ReopenChoice
   reopenPercentage?: number
+  reopenMode?: 1 | 2 | 3 | 4
 }
 
 export function usePublicTickets() {
@@ -114,6 +115,7 @@ export function usePublicTickets() {
           await saveReopenCost({
             ticketId: input.ticketId,
             percentage: input.reopenPercentage,
+            mode: input.reopenMode ?? 1,
           })
         }
 

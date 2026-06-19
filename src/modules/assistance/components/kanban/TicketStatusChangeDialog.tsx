@@ -44,7 +44,11 @@ interface TicketStatusChangeDialogProps {
   isSubmitting: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: (comment: string, supercost?: number) => Promise<void>
-  onReopenChoice?: (choice: ReopenChoice, percentage?: number) => Promise<void>
+  onReopenChoice?: (
+    choice: ReopenChoice,
+    percentage?: number,
+    mode?: 1 | 2 | 3 | 4,
+  ) => Promise<void>
 }
 
 export function TicketStatusChangeDialog({
@@ -59,6 +63,7 @@ export function TicketStatusChangeDialog({
   const [comment, setComment] = useState("")
   const [supercost, setSupercost] = useState("")
   const [percentage, setPercentage] = useState("10")
+  const [reopenMode, setReopenMode] = useState<1 | 2 | 3 | 4>(1)
   const copy = kind ? dialogCopy[kind] : null
 
   useEffect(() => {
@@ -66,6 +71,7 @@ export function TicketStatusChangeDialog({
       setComment("")
       setSupercost("")
       setPercentage("10")
+      setReopenMode(1)
     }
   }, [open])
 
@@ -101,6 +107,7 @@ export function TicketStatusChangeDialog({
       await onReopenChoice?.(
         choice,
         choice === "reopen" ? parsedPercentage : undefined,
+        choice === "reopen" ? reopenMode : undefined,
       )
     } catch {
       // L'erreur est affichée par la page parente via usePublicTickets.
@@ -142,20 +149,40 @@ export function TicketStatusChangeDialog({
 
             <div className="rounded-lg border border-border/60 p-4 space-y-3">
               <p className="text-sm text-muted-foreground">
-                Réouverture : frais calculés sur le dernier supercost.
+                Réouverture : frais calculés selon le mode choisi.
               </p>
-              <div className="space-y-2">
-                <Label htmlFor="status-change-percentage">Pourcentage (%)</Label>
-                <Input
-                  id="status-change-percentage"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={percentage}
-                  onChange={(event) => setPercentage(event.target.value)}
-                  placeholder="10"
-                  disabled={isSubmitting}
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="status-change-percentage">Pourcentage (%)</Label>
+                  <Input
+                    id="status-change-percentage"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={percentage}
+                    onChange={(event) => setPercentage(event.target.value)}
+                    placeholder="10"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status-change-mode">Mode</Label>
+                  <select
+                    id="status-change-mode"
+                    value={reopenMode}
+                    onChange={(event) =>
+                      setReopenMode(Number(event.target.value) as 1 | 2 | 3 | 4)
+                    }
+                    disabled={isSubmitting}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value={1}>1- last SPcost</option>
+                    <option value={2}>2- first SPcost </option>
+                    <option value={3}>3- average SPcost</option>
+                    <option value={4}>4- sum SPcost</option>
+
+                  </select>
+                </div>
               </div>
               <Button
                 className="w-full"
@@ -187,6 +214,7 @@ export function TicketStatusChangeDialog({
                   )}
                 />
               </div>
+
 
               {kind === "solution" && (
                 <div className="space-y-2">

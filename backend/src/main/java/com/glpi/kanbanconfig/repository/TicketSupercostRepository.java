@@ -13,4 +13,7 @@ public interface TicketSupercostRepository extends JpaRepository<TicketSupercost
             Integer ticketId,
             String movementType
     );
+
+
+    
 }

@@ -49,6 +49,7 @@ export function TicketsKanbanPage() {
     supercost?: number,
     reopenChoice?: "cancel" | "reopen",
     reopenPercentage?: number,
+    reopenMode?: 1 | 2 | 3 | 4,
   ) => {
     await changeTicketStatus({
       ticketId,
@@ -57,6 +58,7 @@ export function TicketsKanbanPage() {
       supercost,
       reopenChoice,
       reopenPercentage,
+      reopenMode,
     })
   }
 

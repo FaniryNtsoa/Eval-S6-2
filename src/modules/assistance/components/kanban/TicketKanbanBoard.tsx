@@ -54,6 +54,7 @@ interface TicketKanbanBoardProps {
     supercost?: number,
     reopenChoice?: ReopenChoice,
     reopenPercentage?: number,
+    reopenMode?: 1 | 2 | 3 | 4,
   ) => Promise<void>
   onAddTicket: () => void
 }
@@ -120,6 +121,7 @@ export function TicketKanbanBoard({
     supercost?: number,
     reopenChoice?: ReopenChoice,
     reopenPercentage?: number,
+    reopenMode?: 1 | 2 | 3 | 4
   ) => {
     await onStatusChange(
       ticketId,
@@ -128,6 +130,7 @@ export function TicketKanbanBoard({
       supercost,
       reopenChoice,
       reopenPercentage,
+      reopenMode
     )
     setPendingChange(null)
   }
@@ -269,7 +272,7 @@ export function TicketKanbanBoard({
             supercost,
           )
         }}
-        onReopenChoice={async (choice, percentage) => {
+        onReopenChoice={async (choice, percentage, mode) => {
           if (!pendingChange) {
             return
           }
@@ -281,6 +284,7 @@ export function TicketKanbanBoard({
             undefined,
             choice,
             percentage,
+            mode
           )
         }}
       />
